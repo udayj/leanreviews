@@ -63,7 +63,7 @@
         <div class="row">
           <div class="span4">
 
-      	   <h2> Movie Review</h2>
+      	   <h2> Trending Reviews</h2>
       </div>
     </div>
     <div class="row">
@@ -134,54 +134,7 @@
         </div>     
         {% endif %}  
       </div>
-<div class="row">
-        <div class="span12">
-          <div class="pagination pagination-centered">
-            <ul>
-              {% if pagination[0] %}
-              <li>
-                
-                <a href="{{url}}?p={{pagination[0]}}">←</a>
-              </li>
-              {% endif %}
-              {% if pagination[1] %}
-              <li class="disabled">
-                
-                <a href="#">...</a>
-              </li>
-              {% endif %}
-              {% if pagination[2] %}
-              <li>
-                
-                <a href="{{url}}?p={{pagination[2]}}">{{pagination[2]}}</a>
-              </li>
-              {% endif %}
-              <li class="active">
-                <a href="{{url}}?p={{pagination[3]}}">{{pagination[3]}}</a>
-              </li>
-              {% if pagination[4] %}
-              <li>
-                
-                <a href="{{url}}?p={{pagination[4]}}">{{pagination[4]}}</a>
-              </li>
-              {% endif %}
-              {% if pagination[5] %}
-              <li class="disabled">
-                
-                <a href="#">...</a>
-              </li>
-              {% endif %}
-              {% if pagination[6] %}
-              <li>
-                
-                <a href="{{url}}?p={{pagination[6]}}">→</a>
-              </li>
-              {% endif %}
 
-            </ul>
-          </div>
-        </div>
-      </div>
 
       <hr>
       

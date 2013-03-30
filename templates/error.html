@@ -61,39 +61,12 @@
       <!-- Example row of columns -->
         <div class="container">
         <div class="row">
-          <div class="span6">
+          <div class="span10">
 
-      	   <h2> {{review['name']}} </h2>
-           <h4> This refers to an item. Still confused? Find out more <a href="http://www.google.com/search?q={{review['name']}}"> here</a>.
-            <br>
-            Can't find what you are looking for? Add a new review here.
-           </h4>
+      	   <h4> We can't find what you are looking for :(</h4>
+           <h4> Try searching for something else </h4>
       </div>
-    </div>
-      <div class="row">
-        <div style="display:none" id="review_words">
-          {{review['data']}}
-        </div>
-        <div class="span8" id="word_cloud">
-        </div>
-        <div class="span4" style="position:relative;top:30px;">
-          <div class="row">
-            <div class="span4">
-          Rate this: <span class="btn btn-success"> Up Vote</span> <span class="btn btn-warning"> Down Vote</span>
-            </div>
-          </div>
-          <hr>
-          <div class="row">
-            <div class="span4">
-              Your review - in 20 characters or less<br>
-              <input name="name" class="span4" type="text"  placeholder="Search for a review eg. The Social Network" >
-              <br>
-              <span class="btn btn-primary">Submit</span>
-            </div>
-          </div>
-
-        </div>
-
+    
       </div>
       
 
