@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, Response, redirect, url_for
 from pymongo import MongoClient
 import json
 import random
@@ -9,6 +9,9 @@ app.config.from_object(__name__)
 @app.route('/')
 def front():
 	return render_template('front.html')
+@app.route('/add_new')
+def add_new():
+	return render_template('add_new.html')
 
 @app.route('/browse/<category>')
 def category(category):
@@ -91,6 +94,8 @@ def item():
 		data.append({'text':word,'size':value})
 	output_review['name']=review['display_name']
 	output_review['data']=json.dumps(data)
+	output_review['upvote']=review['upvote']
+	output_review['downvote']=review['downvote']
 	app.logger.debug(output_review)
 	return render_template('item.html',review=output_review)
 
@@ -118,6 +123,74 @@ def trending():
 			data.append({'text':word,'size':value})
 		output_review.append({'name':review['display_name'],'data':json.dumps(data)})
 	return render_template('trending.html',reviews=output_review,length=9)
+
+@app.route('/rate_item',methods=['POST'])
+def rate_item():
+	
+	app.logger.debug(str(request.form))
+	data={}
+	for name,value in dict(request.form).iteritems():
+		data[name]=value[0].lower().strip()
+	client=MongoClient()
+	db=client.leanreviews
+	review=db.reviews.find({'name':data['name']})
+	review=review.next()
+	_id=review['_id']
+	if data['vote']=='up_vote':
+		new_upvote=review['upvote']+1
+		review['upvote']=new_upvote
+		db.reviews.save(review)
+		#result=db.reviews.update({'_id':str(_id)},{'$set':{'upvote':new_upvote}})
+	else:
+		review['downvote']=review['downvote']+1
+		db.reviews.save(review)
+
+	js=json.dumps({'success':'success'})
+
+	resp = Response(js, status=200, mimetype='application/json')
+	return resp
+
+@app.route('/review_item',methods=['POST'])
+def review_item():
+	
+	app.logger.debug(str(request.form))
+	data={}
+	for name,value in dict(request.form).iteritems():
+		data[name]=value[0].lower().strip()
+	client=MongoClient()
+	db=client.leanreviews
+	review=db.reviews.find({'name':data['name']})
+	review=review.next()
+	if data['review'] in review['words']:
+		review['words'][data['review']]=review['words'][data['review']]+1
+	else:
+		review['words'][data['review']]=1
+	db.reviews.save(review)
+	js=json.dumps({'success':'success'})
+
+	resp = Response(js, status=200, mimetype='application/json')
+	return resp
+
+@app.route('/process_new_item',methods=['POST'])
+def process_new_item():
+	data={}
+	for name,value in dict(request.form).iteritems():
+		if name in ('category','review'):
+			data[name]=value[0].lower().strip()
+		else:
+			data[name]=value[0]
+	app.logger.debug(data)
+	client=MongoClient()
+	db=client.leanreviews
+	db.reviews.save({'name':data['name'].lower().strip(),
+					 'display_name':data['name'],
+					 'description':data['description'],
+					 'categories':data['category'],
+					 'words':{data['review']:40},
+					 'upvote':0,
+					 'downvote':0})
+	#update appropriate category or create new category
+	return redirect(url_for('item',name=data['name'].lower().strip()))
 
 
 if __name__=='__main__':

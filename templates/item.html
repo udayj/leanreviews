@@ -63,7 +63,9 @@
         <div class="row">
           <div class="span6">
 
-      	   <h2> {{review['name']}} </h2>
+      	   <h2 style="display:inline"> {{review['name']}} </h2>  <span class="btn btn-success" style="position:relative;top:-5px">{{review['upvote']}} Up votes</span>  <span class="btn btn-warning" style="position:relative;top:-5px">
+           {{review['downvote']}} Down votes</span>
+           <br>
            <h4> This refers to an item. Still confused? Find out more <a href="http://www.google.com/search?q={{review['name']}}"> here</a>.
             <br>
             Can't find what you are looking for? Add a new review here.
@@ -79,16 +81,23 @@
         <div class="span4" style="position:relative;top:30px;">
           <div class="row">
             <div class="span4">
-          Rate this: <span class="btn btn-success"> Up Vote</span> <span class="btn btn-warning"> Down Vote</span>
+          Rate this: <span class="btn btn-success" onclick="send_rating('{{review['name']}}','up_vote')"> Up Vote</span> <span class="btn btn-warning" onclick="send_rating('{{review['name']}}','down_vote')"> Down Vote</span>
+            </div>
+            <br>
+            <div class="span4" id="thanks_vote" style="display:none">
             </div>
           </div>
+
           <hr>
           <div class="row">
             <div class="span4">
               Your review - in 20 characters or less<br>
-              <input name="name" class="span4" type="text"  placeholder="Search for a review eg. The Social Network" >
+              <input id="new_review" name="name" class="span4" type="text"  placeholder="Search for a review eg. The Social Network" >
               <br>
-              <span class="btn btn-primary">Submit</span>
+              <span class="btn btn-primary" onclick="send_review('{{review['name']}}')">Submit</span>
+            </div>
+            <br>
+            <div class="span4" id="thanks_review" style="display:none">
             </div>
           </div>
 
@@ -147,7 +156,58 @@
 draw_word_cloud("#word_cloud","#review_words");
 
      </script>
-
+     <script>
+     function send_rating(name,vote)
+     {
+      $.ajax({
+  type: "POST",
+  url: "/rate_item",
+  data: {name:name,vote:vote},
+  
+  success: function()
+  {
+    
+    $('#thanks_vote').css('display','');
+    $('#thanks_vote').html('Thanks for your vote.');
+  },
+  fail: function()
+  {
+    $('#thanks_vote').css('display','');
+    $('thanks_vote').html('Can\'t submit vote. Try back later!');
+    
+  }
+}).done(function( msg ) {
+ // document.getElementById("user_tips").value="";
+  //alert("Thanks for helping us improve!");
+});
+}
+</script>
+<script>
+function send_review(name)
+     {
+      $.ajax({
+  type: "POST",
+  url: "/review_item",
+  data: {name:name,review:$('#new_review').val()},
+  
+  success: function()
+  {
+    
+    $('#thanks_review').css('display','');
+    $('#thanks_review').html('Thanks for your review.');
+  },
+  fail: function()
+  {
+    $('#thanks_review').css('display','');
+    $('#thanks_review').html('Can\'t submit review. Try back later!');
+    
+  }
+}).done(function( msg ) {
+ // document.getElementById("user_tips").value="";
+  //alert("Thanks for helping us improve!");
+});
+}
+</script>
   </body>
 </html>
 
