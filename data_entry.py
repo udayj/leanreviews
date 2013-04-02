@@ -31,6 +31,8 @@ def seed_data_from_file():
 	client=MongoClient()
 	db=client.leanreviews
 	collection=db.reviews
+	message={'books':'This refers to a book','movies':'This refers to a movie',
+			 'places':'This refers to a place','people':'This refers to a person'}
 	while True:
 		tags=tag_file.readline()
 		if not tags:
@@ -46,6 +48,7 @@ def seed_data_from_file():
 			review={}
 			review['name']=normalize(item)
 			review['display_name']=item.title()
+			review['description']=message[review_type]
 			review['upvote']=100
 			review['downvote']=40
 			review['categories']=review_type

@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Lean Reviews - quick reviews for almost anything</title>
+    <title>Lean Review - quick reviews for almost anything</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -27,7 +26,7 @@
     <div class="container">
 
       <div class="masthead">
-        <h3 class="muted">Lean Reviews</h3>
+        <h3 class="muted">Lean Review</h3>
          <div class="subnav">
           <ul class="nav nav-pills" >
                 <li><a href="/">Home</a></li>
@@ -63,7 +62,7 @@
           
           <input id="search" name="name" class="span5" type="text"  onkeydown="if (event.keyCode==13) { search();}"
            placeholder="Search for a review eg. The Social Network" >
-          <span class="btn btn-primary" onclick="search()" style="position:relative;top:-5px;"> Search</span>
+          <button type="button" class="btn btn-primary" onclick="search()" style="position:relative;top:-5px;"> Search</button>
 
 
       
@@ -138,10 +137,10 @@
                 
                   
                   
-                  <input type="password" id="login_password" name="password" placeholder="Password">
+                  <input type="password" id="login_password" name="password" placeholder="Password" onkeydown="if (event.keyCode==19) { document.getElementById('login_submit').focus();}">
                   <br>
                   <br>
-                  <span type="button" class="btn btn-primary" style="margin-bottom:10px;" onclick="login()">Submit</span>
+                  <button id="login_submit" type="submit" class="btn btn-primary" style="margin-bottom:0px;">Submit</button>
                   
                 
               
@@ -191,8 +190,22 @@
         alert("Passwords do not match");
         return false;
       }
+      if(password.length<5)
+      {
+        alert("Password should be atleast 5 characters");
+        return false;
+      }
 
 
+    });
+    $('#login').submit(function(){
+      var name=$('#name').val();
+  var password=$('#login_password').val();
+  if(name==null || name.trim()=="" || password==null || password.trim()=="")
+  {
+    alert("Email/Username/Password cannot be empty");
+    return false;
+  }
     });
   });
     function search()
@@ -233,6 +246,7 @@
   }
 }
 draw_word_cloud("#word_cloud","#review_words");
+
 
 function login()
 {

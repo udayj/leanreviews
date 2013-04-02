@@ -5,7 +5,7 @@ import json
 import random
 from flask.ext.login import (LoginManager, current_user, login_required,
                             login_user, logout_user, UserMixin, AnonymousUser,
-                            confirm_login, fresh_login_required)
+                            confirm_login, fresh_login_required,login_url)
 from flask.ext.mail import Message, Mail
 import hashlib
 from mongoengine import *
@@ -19,6 +19,7 @@ MAIL_USE_SSL = True
 MAIL_USERNAME = 'udayj.dev'
 MAIL_PASSWORD = 'ud27ay08'
 SECRET_KEY='SECRET'
+SALT='123456789passwordsalt'
 app = Flask(__name__)
 app.config.from_object(__name__)
 
@@ -57,7 +58,7 @@ def load_user(_id):
 	user=db.users.find({'_id':ObjectId(_id)})
 	try:
 		user=user.next()
-		ret_user=User(name=user['name'],email=user['email'],password=user['password'],active=user['active'],_id=str(user['_id']))
+		ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']))
 		return ret_user
 	except StopIteration:
 		return None
@@ -76,16 +77,17 @@ def login():
 		username=data['username']
 		password=data['password']
 	else:
+		app.logger.debug('Login Form submitted without fields')
 		return render_template('/signup.html')
 	client=MongoClient()
 	db=client.leanreviews
+	password=hashlib.sha512(SALT+password).hexdigest()
 	user=db.users.find({'name':username,'password':password})
 	try:
 		user=user.next()
-		ret_user=User(name=user['name'],email=user['email'],password=user['password'],active=user['active'],_id=str(user['_id']))
+		ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']))
 		if login_user(ret_user):
 			flash('Logged in!')
-			app.logger.debug('logging in user')
 			return redirect(url_for('front'))
 		else:
 			return render_template('/signup.html',error='Cannot login. Account still inactive')
@@ -93,10 +95,9 @@ def login():
 		user=db.users.find({'email':username,'password':password})
 		try:
 			user=user.next()
-			ret_user=User(name=user['name'],email=user['email'],password=user['password'],active=user['active'],_id=str(user['_id']))
+			ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']))
 			if login_user(ret_user):
 				flash('Logged in!')
-				app.logger.debug('logging in user')
 				return redirect(url_for('front'))
 			else:
 				return render_template('/signup.html',error='Cannot login. Account still inactive')
@@ -122,7 +123,7 @@ def activate():
 		user=user.next()
 		user['active']=True
 		db.users.save(user)
-		ret_user=User(name=user['name'],email=user['email'],password=user['password'],active=user['active'],_id=str(user['_id']))
+		ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']))
 		login_user(ret_user)
 		return render_template('activate.html',message='Welcome to Lean Reviews. Your account has been activated')
 	except StopIteration:
@@ -161,7 +162,7 @@ def signup():
 
 		_id=db.users.save({'name':username,
 					   'email':data['email'],
-					   'password':data['password'],
+					   'password':hashlib.sha512(SALT+data['password']).hexdigest(),
 					   'activation_hash':activation_hash,
 					   'active':False})
 		#user=User(name=username,email=data['email'],password=data['password'],active=False,id=str(_id))
@@ -169,10 +170,13 @@ def signup():
 		mail=Mail(app)
 		
 		msg.body = 'Click this link to activate your account http://localhost:5000/activate?hash='+activation_hash
-		
+		app.logger.debug('Sending activation email to:'+data['email'])
 		app.logger.debug(activation_hash)
-
-		mail.send(msg)
+		try:
+			mail.send(msg)
+		except Exception:
+			db.users.remove({'_id':_id})
+			return render_template('signup.html',signup_error='Problem sending email. Account not created. Try again later.',username=username,email=data['email'])
 		return render_template('checkmail.html')
 
 
@@ -181,10 +185,13 @@ def signup():
 def add_new():
 	return render_template('add_new.html')
 
+def truncate_word(word,length):
+	if len(word)>length:
+		return word[:length-3]+'...'
+	return word
 @app.route('/browse/<category>')
 def category(category):
 	page=request.args.get('p')
-	app.logger.debug(request.path)
 	if not page:
 		page=1
 	else:
@@ -208,8 +215,6 @@ def category(category):
 	active[category]="active"
 	
 	display={'books':'Book Reviews','movies':'Movie Reviews','places':'Place Reviews','people':'People Reviews'}
-
-	app.logger.debug(str(review_ids))
 	start=(page-1)*9
 	if start>len(review_ids)-1:
 		start=0
@@ -224,7 +229,10 @@ def category(category):
 		data=[]
 		for word,value in review['words'].iteritems():
 			data.append({'text':word,'size':value})
-		output_review.append({'name':review['display_name'],'data':json.dumps(data),
+		description=truncate_word(review['description'],30)
+		display_name=truncate_word(review['display_name'],24)
+		output_review.append({'name':display_name,'description':description,'data':json.dumps(data),
+							  'title_description':review['description'],'title_name':review['display_name'],
 							  'url':'/item?name='+review['name']+'&id='+str(review['_id'])})
 	left=None
 	left_ellipses=None
@@ -262,12 +270,15 @@ def item():
 	review=None
 	cursor=None
 	if _id:
-		review=collection.find({'_id':ObjectId(_id)})
+		try:
+			review=collection.find({'_id':ObjectId(_id)})
+		except Exception:
+			return render_template('error.html')
 		cursor=review
 		try:
 			
 			review=review.next()
-			app.logger.debug('find by id')
+			
 		except StopIteration:
 			name=request.args.get('name')
 			if not name:
@@ -277,7 +288,7 @@ def item():
 			cursor=review
 			try:
 				review=review.next()
-				app.logger.debug('find by name')
+				
 			except StopIteration:
 				return render_template('error.html')
 	else:
@@ -294,7 +305,6 @@ def item():
 	total_reviews=[review]
 	for review in cursor:
 		total_reviews.append(review)
-	app.logger.debug(total_reviews)
 	if len(total_reviews)==1:
 		data=[]
 		output_review={}
@@ -305,11 +315,12 @@ def item():
 		output_review['data']=json.dumps(data)
 		output_review['upvote']=review['upvote']
 		output_review['downvote']=review['downvote']
+		output_review['description']=review['description']
 		app.logger.debug(output_review)
 		return render_template('item.html',review=output_review)
 	else:
 		page=request.args.get('p')
-		app.logger.debug(request.path)
+		
 		if not page:
 			page=1
 		else:
@@ -330,7 +341,10 @@ def item():
 			data=[]
 			for word,value in review['words'].iteritems():
 				data.append({'text':word,'size':value})
-			output_review.append({'name':review['display_name'],'data':json.dumps(data),
+			description=truncate_word(review['description'],30)
+			display_name=truncate_word(review['display_name'],24)
+			output_review.append({'name':display_name,'data':json.dumps(data),'description':description,
+								  'title_name':review['display_name'],
 								  'url':'/item?name='+review['name']+'&id='+str(review['_id'])})
 		left=None
 		left_ellipses=None
@@ -372,7 +386,6 @@ def get_trending_data(count):
 	review_ids_mixed=[]
 	for category in categories:
 		present_category=collection.find({'name':category})
-		app.logger.debug(category)
 		present_category=present_category.next()
 		review_ids=present_category['review_ids']
 		review_ids_mixed=review_ids_mixed+review_ids
@@ -380,12 +393,14 @@ def get_trending_data(count):
 	output_review=[]
 	for count in range(0,count):
 		review=db.reviews.find({'_id':review_ids_mixed[count]})
-		app.logger.debug(str(review_ids_mixed[count]))
 		review=review.next()
 		data=[]
 		for word,value in review['words'].iteritems():
 			data.append({'text':word,'size':value})
-		output_review.append({'name':review['display_name'],'data':json.dumps(data),
+		description=truncate_word(review['description'],30)
+		display_name=truncate_word(review['display_name'],24)
+		output_review.append({'name':display_name,'data':json.dumps(data),
+							  'description':description,'title_name':review['display_name'],
 							  'url':'/item?name='+review['name']+'&id='+str(review['_id'])})
 	return output_review
 
@@ -398,14 +413,24 @@ def trending():
 @login_required
 def rate_item():
 	
-	app.logger.debug(str(request.form))
 	data={}
 	for name,value in dict(request.form).iteritems():
 		data[name]=value[0].lower().strip()
+	
+	#if not current_user or not current_user.is_authenticated():
+	#	return redirect(login_url('signup',next_url=url_for('item',id=data['id'])))
+	
+	
 	client=MongoClient()
 	db=client.leanreviews
 	app.logger.debug(data)
-	review=db.reviews.find({'_id':ObjectId(data['id'])})
+	review=None
+	try:
+		review=db.reviews.find({'_id':ObjectId(data['id'])})
+	except Exception:
+		js=json.dumps({'success':'false'})
+		resp = Response(js, status=500, mimetype='application/json')
+		return resp		
 	review=review.next()
 	_id=review['_id']
 	if data['vote']=='up_vote':
@@ -426,13 +451,19 @@ def rate_item():
 @login_required
 def review_item():
 	
-	app.logger.debug(str(request.form))
+	
 	data={}
 	for name,value in dict(request.form).iteritems():
 		data[name]=value[0].lower().strip()
 	client=MongoClient()
 	db=client.leanreviews
-	review=db.reviews.find({'_id':ObjectId(data['id'])})
+	review=None
+	try:
+		review=db.reviews.find({'_id':ObjectId(data['id'])})
+	except Exception:
+		js=json.dumps({'success':'false'})
+		resp = Response(js, status=500, mimetype='application/json')
+		return resp	
 	review=review.next()
 	if data['review'] in review['words']:
 		review['words'][data['review']]=review['words'][data['review']]+1
@@ -453,17 +484,16 @@ def process_new_item():
 			data[name]=value[0].lower().strip()
 		else:
 			data[name]=value[0]
-	app.logger.debug(data)
 	client=MongoClient()
 	db=client.leanreviews
 	_id=db.reviews.save({'name':data['name'].lower().strip(),
 					 'display_name':data['name'],
-					 'description':data['description'],
+					 'description':data['description'] or '',
 					 'categories':data['category'],
 					 'words':{data['review']:40},
 					 'upvote':0,
 					 'downvote':0})
-	app.logger.debug(_id)
+	
 	if data['category']:
 		category=db.categories.find({'name':data['category']})
 		try:
@@ -477,7 +507,14 @@ def process_new_item():
 
 	
 	return redirect(url_for('item',id=str(_id),name=data['name'].lower().strip()))
-
+if app.debug is not "check":   
+    import logging
+    from logging.handlers import RotatingFileHandler
+    file_handler = RotatingFileHandler('application.log', maxBytes=1024 * 1024 * 100, backupCount=20)
+    file_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(asctime)s - %(funcName)s - %(levelname)s - %(message)s")
+    file_handler.setFormatter(formatter)
+    app.logger.addHandler(file_handler)
 
 if __name__=='__main__':
 	app.run(debug=True)

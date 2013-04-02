@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Lean Reviews - quick reviews for almost anything</title>
+    <title>Lean Review - quick reviews for almost anything</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -27,7 +27,7 @@
     <div class="container">
 
       <div class="masthead">
-        <h3 class="muted">Lean Reviews</h3>
+        <h3 class="muted">Lean Review</h3>
         <div class="subnav">
           <ul class="nav nav-pills" >
                 <li><a href="/">Home</a></li>
@@ -63,7 +63,7 @@
           
           <input id="search" name="name" class="span5" type="text" onkeydown="if (event.keyCode==13) { search();}"
            placeholder="Search for a review eg. The Social Network" >
-          <span class="btn btn-primary" onclick="search()" style="position:relative;top:-5px;"> Search</span>
+          <button type="button" class="btn btn-primary" onclick="search()" style="position:relative;top:-5px;"> Search</button>
 
 
       
@@ -90,7 +90,11 @@
           <div style="display:none" id="review{{review_counter}}words">
             {{review['data']}}
           </div>
-          <h2 style="color:black">{{review['name']}}</h2>
+          <h2 style="color:black" title="{{review['title_name']}}">{{review['name']}}</h2>
+          {% if not review['description'] or review['description']=='' %}
+          <br>
+          {% endif %}
+          <h4>{{review['description']}}</h4>
           
         </div>
       </a>
@@ -114,7 +118,11 @@
           <div style="display:none" id="review{{review_counter}}words">
             {{review['data']}}
           </div>
-          <h2 style="color:black">{{review['name']}}</h2>
+          <h2 style="color:black" title="{{review['title_name']}}">{{review['name']}}</h2>
+           {% if not review['description'] or review['description']=='' %}
+          <br>
+          {% endif %}
+          <h4 >{{review['description']}}</h4>
           
         </div>
       </a>
@@ -139,7 +147,11 @@
           <div style="display:none" id="review{{review_counter}}words">
             {{review['data']}}
           </div>
-          <h2 style="color:black">{{review['name']}}</h2>
+          <h2 style="color:black" title="{{review['title_name']}}">{{review['name']}}</h2>
+           {% if not review['description'] or review['description']=='' %}
+          <br>
+          {% endif %}
+          <h4>{{review['description']}}</h4>
           
         </div>
       </a>      

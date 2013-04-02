@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Lean Reviews - quick reviews for almost anything</title>
+    <title>Lean Review - quick reviews for almost anything</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -27,7 +27,7 @@
     <div class="container">
 
       <div class="masthead">
-        <h3 class="muted">Lean Reviews</h3>
+        <h3 class="muted">Lean Review</h3>
         <div class="subnav">
           <ul class="nav nav-pills" >
                 <li><a href="/">Home</a></li>
@@ -151,7 +151,7 @@
       var description=$('#description').val()
       var category=$('#category').val()
       var review=$('#review').val()
-      alert("checking")
+      
       if(!checkMaxLength(name,40))
       {
         alert('Name cannot be more than 40 characters');
@@ -221,9 +221,7 @@
         .text(function(d) { return d.text; });
   }
 }
-draw_word_cloud("#trend1");
-draw_word_cloud("#trend2");
-draw_word_cloud("#trend3");
+
      </script>
 
   </body>
