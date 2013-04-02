@@ -61,7 +61,7 @@
         
         <div class="span6" style="position:relative;top:15px;">
           
-          <input id="search" name="name" class="span5" type="text"  onkeydown="if (event.keyCode==13) { search();}"
+          <input id="search" name="name" class="span5" type="text" onkeydown="if (event.keyCode==13) { search();}"
            placeholder="Search for a review eg. The Social Network" >
           <span class="btn btn-primary" onclick="search()" style="position:relative;top:-5px;"> Search</span>
 
@@ -69,14 +69,15 @@
       
     </div>
   </div>
-<br>
-      <!-- Example row of columns -->
+  <br>
+
+      <!-- Example row of columns  121 rs. 57 200 Mtr.-->
         <div class="container">
         <div class="row">
           <div class="span10">
 
-      	   <h4> We can't find what you are looking for :(</h4>
-           <h4> Try searching for something else </h4>
+      	   <h4> {{message}}</h4>
+           
       </div>
     
       </div>
@@ -86,7 +87,7 @@
 
       <hr>
 
-      <div class="footer">
+     <div class="footer">
         <p>&copy; LeanReviews.com 2013. All rights reserved.</p>
       </div>
 
@@ -95,13 +96,14 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/static/javascript/items.js"></script>
+     <script src="/static/javascript/items.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
      <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
+    
     <script src="/static/javascript/d3.js"> </script>
     <script src="/static/javascript/d3.layout.cloud.js"> </script>
     <script>
-    $(document).ready(function() {
+     $(document).ready(function() {
     $("input#search").autocomplete({
     source: items
 });});

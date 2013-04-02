@@ -28,7 +28,7 @@
 
       <div class="masthead">
         <h3 class="muted">Lean Reviews</h3>
-        <div class="subnav">
+         <div class="subnav">
           <ul class="nav nav-pills" >
                 <li><a href="/">Home</a></li>
                 <li id="books" ><a href="/browse/books">Books</a></li>
@@ -38,7 +38,7 @@
                 <li id="trending"><a href="/trending">Trending</a></li>
                 <li id="about"><a href="/about">About</a></li>
                   {% if not current_user.email %}
-                <li class="pull-right"><a href="/signup">Login</a></li>
+                <li class="active pull-right"><a href="/signup">Login</a></li>
                 <li class="pull-right"><a href="/signup">SignUp</a></li>
                 
                 {% else %}
@@ -69,20 +69,90 @@
       
     </div>
   </div>
-<br>
+  <br>
+
       <!-- Example row of columns -->
         <div class="container">
         <div class="row">
-          <div class="span10">
+          <div class="span7">
 
-      	   <h4> We can't find what you are looking for :(</h4>
-           <h4> Try searching for something else </h4>
+      	   <h3> Login using Google or Facebook</h3>
+           <hr>
+           <div class="row">
+            <div class="span6">
+              <div>{{signup_error}}</div>
+           <form id="form" class="form-horizontal well" action="/signup" method="post">
+            <fieldset>
+              <legend>Create a new account here</legend>
+              <div class="control-group">
+                
+                  <label class="control-label" for="email">Email Id </label>
+                  <div class="controls">
+                  <input type="text" id="email"  name="email" placeholder="{{email}}" value="{{email}}">
+                  </div>
+              </div>
+              <div class="control-group">
+                
+                  <label class="control-label" for="username" >Choose Username</label>
+                  <div class="controls">
+                  <input type="text" id="username" name="username" placeholder="{{username}}" value="{{username}}">
+                  <p class="help-block">This is optional</p>
+                </div>
+              </div>
+              <div class="control-group">
+                
+                  <label class="control-label" for="password">Password</label>
+                  <div class="controls">
+                  <input type="password" id="password" name="password">
+                  <p class="help-block">Should be atleast 5 characters</p>
+                </div>
+              </div>
+              <div class="control-group">
+                
+                  <label class="control-label" for="confirm_password">Confirm Password</label>
+                  <div class="controls">
+                  <input type="password" id="confirm_password" name="confirm_password">
+                  
+                </div>
+              </div>
+              <div class="form-actions">
+                <input type="submit" class="btn btn-primary"></input>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+      </div>
+    </div>
+        <div class="span5" style="position:relative;top:95px;">
+          <div>{{error}}</div>
+          <form class="well form-search" action="/login" method="post" id="login">
+            <fieldset>
+              <legend>Already a member? Login below</legend>
+              
+                               
+                  
+                  <input type="text" id="name" name="username" placeholder="Email/Username">
+                   
+                  <br>
+                  <br>
+                
+                  
+                  
+                  <input type="password" id="login_password" name="password" placeholder="Password">
+                  <br>
+                  <br>
+                  <span type="button" class="btn btn-primary" style="margin-bottom:10px;" onclick="login()">Submit</span>
+                  
+                
+              
+            </fieldset>
+          </form>
+        </div>
+      
       </div>
     
       </div>
       
-
-    </div>
 
       <hr>
 
@@ -95,7 +165,7 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/static/javascript/items.js"></script>
+     <script src="/static/javascript/items.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
      <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
     <script src="/static/javascript/d3.js"> </script>
@@ -104,7 +174,27 @@
     $(document).ready(function() {
     $("input#search").autocomplete({
     source: items
-});});
+});
+    $('#form').submit(function(){
+      var username=$('#username').val();
+      var email=$('#email').val()
+      var password=$('#password').val();
+      var confirm_password=$('#confirm_password').val();
+      if(email==null || email.trim()=="" || password==null || password.trim()=="")
+      {
+        alert("Email and password cannot be empty");
+        return false;
+
+      }
+      if(password!=confirm_password)
+      {
+        alert("Passwords do not match");
+        return false;
+      }
+
+
+    });
+  });
     function search()
     {
         var name=document.getElementById("search");
@@ -144,6 +234,18 @@
 }
 draw_word_cloud("#word_cloud","#review_words");
 
+function login()
+{
+  
+  var name=$('#name').val();
+  var password=$('#login_password').val();
+  if(name==null || name.trim()=="" || password==null || password.trim()=="")
+  {
+    alert("Email/Username/Password cannot be empty");
+    return;
+  }
+  $('#login').submit();
+}
      </script>
 
   </body>

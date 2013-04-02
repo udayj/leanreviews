@@ -10,6 +10,7 @@
     <!-- Le styles -->
     <link href="/static/stylesheets/bootstrap.min.css" rel="stylesheet">
     <link href="/static/stylesheets/front.css" rel="stylesheet">
+    <link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css">
        
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -27,41 +28,52 @@
 
       <div class="masthead">
         <h3 class="muted">Lean Reviews</h3>
-        <div class="navbar">
-          <div class="navbar-inner" >
-            <div class="container" >
-              <ul class="nav" >
-                <li class="active"><a href="#">Home</a></li>
-                <li><a href="#">Books</a></li>
-                <li><a href="#">Movies</a></li>
-                <li><a href="#">Places</a></li>
-                <li><a href="#">Trending</a></li>
-                <li><a href="#">About</a></li>
+      <div class="subnav">
+          <ul class="nav nav-pills" >
+                <li><a href="/">Home</a></li>
+                <li id="books" ><a href="/browse/books">Books</a></li>
+                <li id="movies" ><a href="/browse/movies">Movies</a></li>
+                <li id="places" ><a href="/browse/places">Places</a></li>
+                <li id="people" ><a href="/browse/people">People</a></li>
+                <li id="trending"><a href="/trending">Trending</a></li>
+                <li id="about"><a href="/about">About</a></li>
+                  {% if not current_user.email %}
+                <li class="pull-right"><a href="/signup">Login</a></li>
+                <li class="pull-right"><a href="/signup">SignUp</a></li>
+                
+                {% else %}
+                <li class="pull-right"><a href="/logout">Logout</a></li>
+                <span class="pull-right" style="position:relative;top:7px;"> Hi,
+                  {% if current_user.name %}
+                  {{current_user.name}}
+                  {% else %}
+                  {{current_user.email}}
+                  {% endif %}
+                </span>
+                
+                {% endif %}
               </ul>
             </div>
-          </div>
-        </div><!-- /.navbar -->
       </div>
 
       <!-- Jumbotron -->
       <div class="row">
-        <div class="span4">
-          <h3>Search for a review  </h3>
-        </div>
+        
         <div class="span6" style="position:relative;top:15px;">
-          <form method="get" action="/" class="form-inline" >
-          <input name="name" class="span5" type="text"  placeholder="Search for a review eg. The Social Network" >
-          <span class="btn btn-primary"> Search</span>
+          
+          <input id="search" name="name" class="span5" type="text" onkeydown="if (event.keyCode==13) { search();}"
+           placeholder="Search for a review eg. The Social Network" >
+          <span class="btn btn-primary" onclick="search()" style="position:relative;top:-5px;"> Search</span>
 
 
-      </form>
+      
     </div>
   </div>
-
+<br>
       <!-- Example row of columns -->
         <div class="container">
         <div class="row">
-          <div class="span6">
+          <div class="span12">
 
       	   <h2 style="display:inline"> {{review['name']}} </h2>  <span class="btn btn-success" style="position:relative;top:-5px">{{review['upvote']}} Up votes</span>  <span class="btn btn-warning" style="position:relative;top:-5px">
            {{review['downvote']}} Down votes</span>
@@ -81,7 +93,7 @@
         <div class="span4" style="position:relative;top:30px;">
           <div class="row">
             <div class="span4">
-          Rate this: <span class="btn btn-success" onclick="send_rating('{{review['name']}}','up_vote')"> Up Vote</span> <span class="btn btn-warning" onclick="send_rating('{{review['name']}}','down_vote')"> Down Vote</span>
+          Rate this: <span class="btn btn-success" onclick="send_rating('{{review['id']}}','up_vote')"> Up Vote</span> <span class="btn btn-warning" onclick="send_rating('{{review['id']}}','down_vote')"> Down Vote</span>
             </div>
             <br>
             <div class="span4" id="thanks_vote" style="display:none">
@@ -94,7 +106,7 @@
               Your review - in 20 characters or less<br>
               <input id="new_review" name="name" class="span4" type="text"  placeholder="Search for a review eg. The Social Network" >
               <br>
-              <span class="btn btn-primary" onclick="send_review('{{review['name']}}')">Submit</span>
+              <span class="btn btn-primary" onclick="send_review('{{review['id']}}')">Submit</span>
             </div>
             <br>
             <div class="span4" id="thanks_review" style="display:none">
@@ -111,7 +123,7 @@
       <hr>
 
       <div class="footer">
-        <p>&copy; Company 2013</p>
+        <p>&copy; LeanReviews.com 2013. All rights reserved.</p>
       </div>
 
     </div> <!-- /container -->
@@ -119,10 +131,24 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
+     <script src="/static/javascript/items.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
+    
     <script src="/static/javascript/d3.js"> </script>
     <script src="/static/javascript/d3.layout.cloud.js"> </script>
     <script>
+    $(document).ready(function() {
+    $("input#search").autocomplete({
+    source: items
+});});
+    function search()
+    {
+        var name=document.getElementById("search");
+        if(name==null || name.value.trim()=="")
+          return;
+        window.location='/item?name='+name.value.trim();
+    }
     var fontSize = d3.scale.log().range([10, 100]);
     var fill = d3.scale.category20();
     function draw_word_cloud(id,review_words){
@@ -157,23 +183,29 @@ draw_word_cloud("#word_cloud","#review_words");
 
      </script>
      <script>
-     function send_rating(name,vote)
+     function send_rating(id,vote)
      {
       $.ajax({
   type: "POST",
   url: "/rate_item",
-  data: {name:name,vote:vote},
+  data: {id:id,vote:vote},
   
   success: function()
   {
     
+    if(!data.success)
+    {
+      window.location.href="http://localhost:5000/signup"
+
+    }
+    else{
     $('#thanks_vote').css('display','');
-    $('#thanks_vote').html('Thanks for your vote.');
+    $('#thanks_vote').html('Thanks for your review.');
   },
   fail: function()
   {
     $('#thanks_vote').css('display','');
-    $('thanks_vote').html('Can\'t submit vote. Try back later!');
+    $('#thanks_vote').html('Can\'t submit vote. Try back later!');
     
   }
 }).done(function( msg ) {
@@ -183,18 +215,35 @@ draw_word_cloud("#word_cloud","#review_words");
 }
 </script>
 <script>
-function send_review(name)
+function send_review(id)
      {
+      var review=$('#new_review').val();
+      if(review==null || review.trim()=="" || review.length==0)
+      {
+        alert("Review cannot be empty");
+        return;
+      }
+      if(review.length>25)
+      {
+        alert("Review should be word or phrase with max of 25 characters");
+        return;
+      }
       $.ajax({
   type: "POST",
   url: "/review_item",
-  data: {name:name,review:$('#new_review').val()},
+  data: {id:id,review:$('#new_review').val()},
   
-  success: function()
+  success: function(data)
   {
-    
+    if(!data.success)
+    {
+      window.location.href="http://localhost:5000/signup"
+
+    }
+    else{
     $('#thanks_review').css('display','');
     $('#thanks_review').html('Thanks for your review.');
+  }
   },
   fail: function()
   {

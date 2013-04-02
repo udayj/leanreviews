@@ -10,6 +10,7 @@
     <!-- Le styles -->
     <link href="/static/stylesheets/bootstrap.min.css" rel="stylesheet">
     <link href="/static/stylesheets/front.css" rel="stylesheet">
+    <link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css">
        
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -27,7 +28,7 @@
 
       <div class="masthead">
         <h3 class="muted">Lean Reviews</h3>
-        <div class="navbar">
+        <!--<div class="navbar">
           <div class="navbar-inner" >
             <div class="container" >
               <ul class="nav" >
@@ -42,45 +43,92 @@
             </div>
           </div>
         </div><!-- /.navbar -->
+        <div class="subnav">
+          <ul class="nav nav-pills">
+                <li class="active"><a href="#">Home</a></li>
+                <li><a href="/browse/books">Books</a></li>
+                <li><a href="/browse/movies">Movies</a></li>
+                <li><a href="nrowse/places">Places</a></li>
+                <li><a href="browse/people">People</a></li>
+                <li><a href="/trending">Trending</a></li>
+                <li><a href="/about">About</a></li>
+                {% if not current_user.email %}
+                <li class="pull-right"><a href="/signup">Login</a></li>
+                <li class="pull-right"><a href="/signup">SignUp</a></li>
+                
+                {% else %}
+                <li class="pull-right"><a href="/logout">Logout</a></li>
+                <span class="pull-right" style="position:relative;top:7px;"> Hi,
+                  {% if current_user.name %}
+                  {{current_user.name}}
+                  {% else %}
+                  {{current_user.email}}
+                  {% endif %}
+                </span>
+                
+                {% endif %}
+              </ul>
+          
+              
+          
+
+            </div>
       </div>
 
       <!-- Jumbotron -->
-      <div class="jumbotron">
+      <div class="jumbotron" style="margin-bottom:0px;">
         <h1>Lean Reviews</h1>
         <p class="lead">Tired of reading long reviews? So are we. Lean Reviews provides quick, concise reviews and encourages people to write more reviews.</p>
         <div class="row">
   		<div class="span12">
-    	<form method="get" action="/" class="form-inline" >
-      		<input name="name" class="span5" type="text"  placeholder="Search for a review eg. The Social Network" >
-      		<span class="btn btn-primary"> Search</span>
-    	</form>
+    	
+      		<input id="search" name="name" class="span5" type="text"  onkeydown="if (event.keyCode==13) { search();}"
+          placeholder="Search for a review eg. The Social Network" >
+      		<span class="btn btn-primary" onclick="search()" style="position:relative;top:-5px;" > Search</span>
+    	
   		</div>
 		</div>
       </div>
 
-      <hr>
+      <hr style="margin-bottom:10px;">
 
       <!-- Example row of columns -->
-      <div class="row" style="position:relative;top:-30px;">
-      	<h2> Now Trending </h2>
-        <div class="span4" id="trend1">
-          <h2 style="color:#0072E6">Godel, Escher, Bach -<br> A Golden Triad</h2>
-          
-        </div>
-        <div class="span4" id="trend2">
-          <h2 style="color:#0072E6">The Social Network</h2>
-          
-       </div>
-        <div class="span4" id="trend3">
-          <h2 style="color:#0072E6">Paris</h2>
-          
-        </div>
+     <div class="container">
+        <div class="row">
+          <div class="span4">
+
+           <h2> Trending Reviews</h2>
       </div>
+    </div>
+    <div class="row">
+    {% set counter=0 %}
+    {% set review_counter=1 %}
+    {% for review in reviews[:3] %}
+      
+        
+      <a href="{{review['url']}}">
+        <div class="span4" id="review{{review_counter}}">
+          <div style="display:none" id="review{{review_counter}}words">
+            {{review['data']}}
+          </div>
+          <h2 style="color:#0072E6">{{review['name']}}</h2>
+          
+        </div>
+    </a>
+      
+
+      
+      {% set counter=counter+1 %}
+      {% set review_counter=review_counter+1 %}
+    {% endfor %}
+        </div>       
+      </div>
+
 
       <hr>
 
       <div class="footer">
-        <p>&copy; Company 2013</p>
+        <p>&copy; LeanReviews.com 2013. All rights reserved.</p>
       </div>
 
     </div> <!-- /container -->
@@ -88,22 +136,40 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    
+    <script src="/static/javascript/items.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
     <script src="/static/javascript/d3.js"> </script>
     <script src="/static/javascript/d3.layout.cloud.js"> </script>
     <script>
-    var fontSize = d3.scale.log().range([10, 100]);
+    $(document).ready(function() {
+    $("input#search").autocomplete({
+    source: items
+});});
+    function search()
+    {
+        var name=document.getElementById("search");
+        if(name==null || name.value.trim()=="")
+          return;
+        window.location='/item?name='+name.value.trim();
+    }
+   var fontSize = d3.scale.log().range([10, 100]);
     var fill = d3.scale.category20();
     function draw_word_cloud(id){
      d3.layout.cloud().size([300, 300])
-      .words([
+      .words(jQuery.parseJSON($(id+'words').html()))
+      /*.words([
         "Hello", "world", "normally", "you", "want", "more", "words",
-        "than", "this","good","bad","interesting","great","awesome","boring"].map(function(d) {
+        "than", "this","Hello", "world", "normally", "you", "want", "more", "words",
+        "than", "this","Hello", "world", "normally", "you", "want", "more", "words",
+        "than", "this","Hello", "world", "normally", "you", "want", "more", "words",
+        "than", "this"].map(function(d) {
         return {text: d, size: 10 + Math.random() * 90};
-      }))
+      }))*/
       .font("Impact")
+      .timeInterval(Infinity)
       .fontSize(function(d) { return d.size; })
-      .rotate(function(d) { return ~~(Math.random() * 5) * 30 - 60; })
+      .rotate(function(d) { return ~~(Math.random() * 5) * 04 - 04; })
       .on("end", draw)
       .start();
 
@@ -126,9 +192,13 @@
         .text(function(d) { return d.text; });
   }
 }
-draw_word_cloud("#trend1");
-draw_word_cloud("#trend2");
-draw_word_cloud("#trend3");
+
+for(var i=0;i<3;i++)
+{
+  draw_word_cloud("#review"+(i+1));
+}
+
+
      </script>
 
   </body>
