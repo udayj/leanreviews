@@ -1,0 +1,37 @@
+Server password: tZUtg4exUEwR - initial - now regular
+
+create ssh based login - done
+create iptables rule - done
+install python 2.7 - done
+install python setuptools (easy install) - done
+install virtual_env - done
+create virtual_env - done
+install yolk - done
+install flask - done
+install flask-login - done
+install flask-mail - done
+install gcc - needed for uwsgi - done
+install python2.7-dev - needed for uwsgi - done
+install uwsgi - done
+install pymongo - done
+install supervisord - done
+install nginx - done
+copy application files to server - done
+check if working via flask
+configure supervisord  - done
+configure nginx - done
+install mongodb - done
+seed database - done
+check if working - done
+supervisord log files
+nginx logfiles - done /var/nginx
+application log files application root directory
+check local memory usage
+server monitoring
+database backup
+swap space
+iptables based security
+raid storage
+linux folder structure
+fabric
+setup production code folder - to avoid copying git files to remote machine

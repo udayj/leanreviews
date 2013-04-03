@@ -8,7 +8,10 @@ from flask.ext.login import (LoginManager, current_user, login_required,
                             confirm_login, fresh_login_required,login_url)
 from flask.ext.mail import Message, Mail
 import hashlib
-from mongoengine import *
+from oauth2client.client import OAuth2WebServerFlow
+import httplib2
+import urllib
+import cgi
 
 #98744399396 6 core multimode 1000 Mtr.
 
@@ -20,6 +23,8 @@ MAIL_USERNAME = 'udayj.dev'
 MAIL_PASSWORD = 'ud27ay08'
 SECRET_KEY='SECRET'
 SALT='123456789passwordsalt'
+FACEBOOK_APP_ID='423477151081458'
+FACEBOOK_APP_SECRET='2c16203539a13addf1ed141e7a68dbd7'
 app = Flask(__name__)
 app.config.from_object(__name__)
 
@@ -65,10 +70,108 @@ def load_user(_id):
 
 login_manager.setup_app(app)
 
+@app.route('/google_oauth_callback')
+def google_oauth_callback():
+	client=MongoClient()
+	db=client.leanreviews
+	flow = OAuth2WebServerFlow(client_id='738745937386.apps.googleusercontent.com',
+                           client_secret='cIy6tyZyyKXeSc8YfqXWtQtS',
+                           scope='https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                           redirect_uri='http://localhost:5000/google_oauth_callback',
+                           access_type='online')
+	code=request.args['code']
+	credentials=flow.step2_exchange(code)
+	http=httplib2.Http()
+	http=credentials.authorize(http)
+	try:
+		resp, content=http.request('https://www.googleapis.com/oauth2/v1/userinfo','GET')
+		content=json.loads(content)
+		user=db.users.find({'email':content['email']})
+
+		try:
+			user=user.next()
+
+			ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(user['_id']))
+			if login_user(ret_user):
+				flash('Logged in!')
+				return redirect(url_for('front'))
+			else:
+				return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.')
+		except Exception:		
+			_id=db.users.save({'name':content['name'],
+							   'email':content['email'],
+							   'password':'',
+							   'activation_hash':'',
+							   'active':True})
+			ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(_id))
+			if login_user(ret_user):
+				flash('Logged in!')
+				return redirect(url_for('front'))
+			else:
+				return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes')
+	except Exception:
+			return render_template('/signup.html',error='Cannot login now. Some problem on our server. Check back in a few minutes.')
+
+@app.route('/facebook_oauth_callback')
+def facebook_oauth_callback():
+	client=MongoClient()
+	db=client.leanreviews
+	args = dict(client_id=FACEBOOK_APP_ID,
+                redirect_uri='http://localhost:5000/facebook_oauth_callback')
+	code=request.args['code']
+	if not code:
+		return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.')
+	args["client_secret"] = FACEBOOK_APP_SECRET
+	args["code"] = code
+	response=None
+	try:
+		response = cgi.parse_qs(urllib.urlopen("https://graph.facebook.com/oauth/access_token?" +urllib.urlencode(args)).read()+"&scope=email")
+	except Exception as e:
+		app.logger.debug(str(e))
+		#app.logger.debug(response)
+		return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.')
+	access_token = response["access_token"][-1]
+	user=None
+	try:
+		content = json.load(urllib.urlopen("https://graph.facebook.com/me?" +urllib.urlencode(dict(access_token=access_token))))
+		user=db.users.find({'email':content['email']})
+	except Exception:
+		app.logger.debug('Problem geting user data from facebook')
+		return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.')
+	
+	try:
+		user=user.next()
+		ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(user['_id']))
+		if login_user(ret_user):
+			flash('Logged in!')
+			return redirect(url_for('front'))
+		else:
+			return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.')
+	except Exception:		
+		_id=db.users.save({'name':content['name'],
+						   'email':content['email'],
+						   'password':'',
+						   'activation_hash':'',
+						   'active':True})
+		ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(_id))
+		if login_user(ret_user):
+			flash('Logged in!')
+			return redirect(url_for('front'))
+		else:
+			return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes')
+		
 @app.route('/login',methods=['GET','POST'])
 def login():
+	flow = OAuth2WebServerFlow(client_id='738745937386.apps.googleusercontent.com',
+                           client_secret='cIy6tyZyyKXeSc8YfqXWtQtS',
+                           scope='https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                           redirect_uri='http://localhost:5000/google_oauth_callback',
+                           access_type='online')
+	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email&client_id=423477151081458&redirect_uri=http://localhost:5000/facebook_oauth_callback'
+
+
 	if request.method=='GET':
-		return render_template('/signup.html')
+		return render_template('/signup.html',google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 	data={}
 	for name,value in dict(request.form).iteritems():
 		data[name]=value[0]
@@ -131,8 +234,16 @@ def activate():
 
 @app.route('/signup',methods=['GET','POST'])
 def signup():
+	flow = OAuth2WebServerFlow(client_id='738745937386.apps.googleusercontent.com',
+                           client_secret='cIy6tyZyyKXeSc8YfqXWtQtS',
+                           scope='https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                           redirect_uri='http://localhost:5000/google_oauth_callback',
+                           access_type='online')
+	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email&client_id=423477151081458&redirect_uri=http://localhost:5000/facebook_oauth_callback'
+
+
 	if request.method=='GET':
-		return render_template('signup.html')
+		return render_template('/signup.html',google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 	else:
 		data={}
 		for name,value in dict(request.form).iteritems():
