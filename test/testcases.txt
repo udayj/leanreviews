@@ -1,0 +1,49 @@
+create new user - without any conflicts - done
+check input validation on signup page - done
+check input validation for login - done
+create new user with conflicting username - done
+create new user without username - done
+create new user with conflicting email - done
+create new user with incorrect email -send message and delete user object from db - done
+activate with wrong hash - done
+activate multiple times - done
+anonymous user submit vote - done
+anonymous user submit review - done
+anonymous add new review - done
+user login - check greeting on different pages - done
+logged in user submit review - check input validation - done
+logged in user submit vote - done
+logged in user add new review - check input validation - done
+check search box - done
+check links from and to different pages - done
+retrieve item with different combinations of _id and name - done
+logged in user logout and perform different actions - done
+login with username - done
+login with email - done
+login with a tab, then use different tab - session maintained - done
+only error logging - read flask documentation - done
+code coverage - done
+description for review on category, trending, front page - done
+
+1.create new user without conflict - done
+2.create new user with conficting username - done
+3.create new user with conflicting email - done
+4.create new user without username without email conflict - done
+5.create new user with wrong emailid - done
+6.login user with wrong credentials - done
+7.login user with correct credentials - done
+8.check user credentials being shown on different pages - not necessary
+9.vote from logged out  - done
+10.review from logged out user - done
+11.activate with correct hash
+12.activate with incorrect hash
+13.get category page - check only items of that category returned
+14.get trending page
+15.get main page
+16.get item page with name only
+17.get item page with id only
+18.get item page with incorrect name
+19.submit review from logged in user - updates in db, output message to user - done
+20.submit vote from logged in user - updates in db, output to user - done
+21.submit new review from logged in user - updates in db, output to logged in user
+22.get item page with multiple entries - check pagination logic

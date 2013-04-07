@@ -10,7 +10,8 @@
     <!-- Le styles -->
     <link href="/static/stylesheets/bootstrap.min.css" rel="stylesheet">
     <link href="/static/stylesheets/front.css" rel="stylesheet">
-    <link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css">       
+    <link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css">
+       
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -34,7 +35,7 @@
                 <li id="movies" ><a href="/browse/movies">Movies</a></li>
                 <li id="places" ><a href="/browse/places">Places</a></li>
                 <li id="people" ><a href="/browse/people">People</a></li>
-                <li id="trending" class="active"><a href="/trending">Trending</a></li>
+                <li id="trending"><a href="/trending">Trending</a></li>
                 <li id="about"><a href="/about">About</a></li>
                   {% if not current_user.email %}
                 <li class="pull-right"><a href="/signup">Login</a></li>
@@ -56,116 +57,70 @@
       </div>
 
       <!-- Jumbotron -->
-        <div class="row">
+      <div class="row">
         
         <div class="span6" style="position:relative;top:15px;">
           
           <input id="search" name="name" class="span5" type="text" onkeydown="if (event.keyCode==13) { search();}"
            placeholder="Search for a review eg. Tom Cruise" >
-          <button type="button" class="btn btn-primary" onclick="search()" style="position:relative;top:-5px;"> Search</button>
+          <span class="btn btn-primary" onclick="search()" style="position:relative;top:-5px;"> Search</span>
 
 
       
     </div>
-  </div>
   </div>
   <br>
-
-      <!-- Example row of columns -->
-        <div class="container">
-        <div class="row">
-          <div class="span4">
-
-      	   <h2> Trending Reviews</h2>
+  <div id="message">{{message}}</div>
+  <br>
+      <div class="row">
+        <div class="span12">
+          <form id="form" class="form-horizontal well" method="post">
+            <input type="text" name="id" id="id" style="display:none" value="{{review['_id']}}">
+            <fieldset>
+              <legend>Edit Review</legend>
+              <div class="control-group">
+                  
+                  <label class="control-label" for="name">Name</label>
+                  <div class="controls">
+                  <input type="text" id="name" class="input-xlarge" name="name" value="{{review['name']}}">
+                
+                </div>
+              </div>
+              <div class="control-group">
+                
+                  <label class="control-label" for="description" >Description</label>
+                  <div class="controls">
+                  <input type="text" id="description" name="description" value="{{review['description']}}">
+                  
+                </div>
+              </div>
+              <div class="control-group">
+                
+                  <label class="control-label" for="category">Category </label>
+                  <div class="controls">
+                  <input type="text" id="category" name="category" value="{{review['categories']}}">
+                  
+                </div>
+              </div>
+              <div class="control-group">
+                
+                  <label class="control-label" for="review">Review</label>
+                  <div class="controls">
+                  <textarea type="text" id="review" name="review" style="width:700px;height:400px;"> {{words}}</textarea>
+                  
+                </div>
+              </div>
+              <div class="form-actions">
+                <input type="submit" class="btn btn-primary"></input>
+              </div>
+            </fieldset>
+          </form>
+        </div>
       </div>
-    </div>
-    <div class="row">
-    {% set counter=0 %}
-    {% set review_counter=1 %}
-    {% for review in reviews[:3] %}
-      
-        
-      <a href="{{review['url']}}">
-        <div class="span4" id="review{{review_counter}}">
-          <div style="display:none" id="review{{review_counter}}words">
-            {{review['data']}}
-          </div>
-           <h2 style="color:#0072E6" title="{{review['title_name']}}">{{review['name']}}</h2>
-           {% if not review['description'] or review['description']=='' %}
-          <br>
-          {% endif %}
-          <h4 >{{review['description']}}</h4>
-          
-        </div>
-    </a>
-      
-
-      
-      {% set counter=counter+1 %}
-      {% set review_counter=review_counter+1 %}
-    {% endfor %}
-        </div>       
-        {% if length>3 %}
-        <div class="row">
-  
-    {% set review_counter=4 %}
-    {% for review in reviews[3:6] %}
-      
-        
-      <a href="{{review['url']}}">
-        <div class="span4" id="review{{review_counter}}">
-          <div style="display:none" id="review{{review_counter}}words">
-            {{review['data']}}
-          </div>
-          <h2 style="color:#0072E6" title="{{review['title_name']}}">{{review['name']}}</h2>
-           {% if not review['description'] or review['description']=='' %}
-          <br>
-          {% endif %}
-          <h4 >{{review['description']}}</h4>
-          
-        </div>
-      </a>
-
-      
-  
-      {% set review_counter=review_counter+1 %}
-    {% endfor %}
-        </div>     
-        {% endif %}  
-        {% if length>6 %}
-        <div class="row">
-  
-    {% set review_counter=7 %}
-    {% for review in reviews[6:] %}
-      
-        
-      <a href="{{review['url']}}">
-        <div class="span4" id="review{{review_counter}}">
-          <div style="display:none" id="review{{review_counter}}words">
-            {{review['data']}}
-          </div>
-          <h2 style="color:#0072E6" title="{{review['title_name']}}">{{review['name']}}</h2>
-           {% if not review['description'] or review['description']=='' %}
-          <br>
-          {% endif %}
-          <h4 >{{review['description']}}</h4>
-          
-        </div>
-      </a>
-      
-
-      
-  
-      {% set review_counter=review_counter+1 %}
-    {% endfor %}
-        </div>     
-        {% endif %}  
-      </div>
-
 
       <hr>
-      
-      <div class="footer">
+
+     <div class="footer">
         <p>&copy; LeanReviews.com 2013. All rights reserved.</p>
       </div>
 
@@ -174,17 +129,62 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/static/javascript/items.js"></script>
+     <script src="/static/javascript/items.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
      <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
-    
     <script src="/static/javascript/d3.js"> </script>
     <script src="/static/javascript/d3.layout.cloud.js"> </script>
     <script>
+    function checkMaxLength(word,len)
+    {
+      if(word!=null)
+      {
+         return word.length<=len;
+      }
+      else
+      {
+        return true;
+      }
+    }
     $(document).ready(function() {
     $("input#search").autocomplete({
-    source: items
-});});
+    source: items});
+
+    $('#form').submit(function(){
+
+      var name=$('#name').val()
+      var description=$('#description').val()
+      var category=$('#category').val()
+      var review=$('#review').val()
+      
+     /* if(!checkMaxLength(name,40))
+      {
+        alert('Name cannot be more than 40 characters');
+        return false;
+      }
+      if(name==null || review==null || name.trim()=="" || review.trim()=="")
+      {
+        alert('Name and review cannot be empty');
+        return false;
+      }
+      if(!checkMaxLength(description,100))
+      {
+        alert('Description cannot be more than 100 characters. Consider being more concise.');
+        return false;
+      }
+      if(!checkMaxLength(category,30))
+      {
+        alert('Category cannot be more than 30 characters');
+        return false; 
+      }
+      if(!checkMaxLength(review,25))
+      {
+        alert('Review cannot be more than 25 characters');
+        return false;
+      }*/
+
+    });
+  });
     function search()
     {
         var name=document.getElementById("search");
@@ -196,19 +196,14 @@
     var fill = d3.scale.category20();
     function draw_word_cloud(id){
      d3.layout.cloud().size([300, 300])
-      .words(jQuery.parseJSON($(id+'words').html()))
-      /*.words([
+      .words([
         "Hello", "world", "normally", "you", "want", "more", "words",
-        "than", "this","Hello", "world", "normally", "you", "want", "more", "words",
-        "than", "this","Hello", "world", "normally", "you", "want", "more", "words",
-        "than", "this","Hello", "world", "normally", "you", "want", "more", "words",
-        "than", "this"].map(function(d) {
+        "than", "this","good","bad","interesting","great","awesome","boring"].map(function(d) {
         return {text: d, size: 10 + Math.random() * 90};
-      }))*/
+      }))
       .font("Impact")
-      .timeInterval(Infinity)
       .fontSize(function(d) { return d.size; })
-      .rotate(function(d) { return ~~(Math.random() * 5) * 04 - 04; })
+      .rotate(function(d) { return ~~(Math.random() * 5) * 30 - 60; })
       .on("end", draw)
       .start();
 
@@ -232,12 +227,6 @@
   }
 }
 
-for(var i=0;i<9;i++)
-{
-  draw_word_cloud("#review"+(i+1));
-}
-
-
      </script>
 
   </body>
@@ -247,10 +236,3 @@ for(var i=0;i<9;i++)
 3 model plate - 4 Pc.
 3 Model box   - 4 Pc.
 6A Switch - 4 Pc.-->
-<!--
-  .words([
-        "Hello", "world", "normally", "you", "want", "more", "words",
-        "than", "this","good","bad","interesting","great","awesome","boring"].map(function(d) {
-        return {text: d, size: 10 + Math.random() * 90};
-      }))
-      -->

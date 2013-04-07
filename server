@@ -20,6 +20,7 @@ copy application files to server - done
 check if working via flask
 configure supervisord  - done
 configure nginx - done
+install google oauth2client
 install mongodb - done
 seed database - done
 check if working - done
@@ -27,11 +28,13 @@ supervisord log files
 nginx logfiles - done /var/nginx
 application log files application root directory
 check local memory usage
-server monitoring
+server monitoring	
 database backup
 swap space
 iptables based security
 raid storage
 linux folder structure
 fabric
+thread safe code
 setup production code folder - to avoid copying git files to remote machine
+separate app settings for prod and development

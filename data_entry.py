@@ -31,13 +31,16 @@ def seed_data_from_file():
 	client=MongoClient()
 	db=client.leanreviews
 	collection=db.reviews
-	message={'books':'This refers to a book','movies':'This refers to a movie',
-			 'places':'This refers to a place','people':'This refers to a person'}
+	message={'books':'','movies':'',
+			 'places':'','people':''}
+	probability={'good':0.8,'bad':0.2}
 	while True:
-		tags=tag_file.readline()
-		if not tags:
+		tags_good=tag_file.readline()
+		if not tags_good:
 			break
-		tags=tags.split(',')
+		tags_bad=tag_file.readline()
+		tags_good=tags_good.split(',')
+		tags_bad=tags_bad.split(',')
 		review_type=types[counter]
 		names=codecs.open('data/'+review_type+'.txt','r','utf-8')
 		while True:
@@ -55,8 +58,10 @@ def seed_data_from_file():
 			review['created_by']='admin'
 			review['creation_time']=datetime.datetime.utcnow()
 			review['words']={}
-			for word in tags:
-				review['words'][word]=randint(10,100)
+			for word in tags_good:
+				review['words'][word]=int(randint(10,180)*probability['good'])
+			for word in tags_bad:
+				review['words'][word]=int(randint(10,400)*probability['bad'])
 			collection.save(review)
 		names.close()
 		counter+=1

@@ -12,27 +12,27 @@ from oauth2client.client import OAuth2WebServerFlow
 import httplib2
 import urllib
 import cgi
+import ast
 
-#98744399396 6 core multimode 1000 Mtr.
 
-MAIL_SERVER = 'smtp.googlemail.com'
-MAIL_PORT = 465
-MAIL_USE_TLS = False
-MAIL_USE_SSL = True
-MAIL_USERNAME = 'udayj.dev'
-MAIL_PASSWORD = 'ud27ay08'
+
 SECRET_KEY='SECRET'
 SALT='123456789passwordsalt'
 FACEBOOK_APP_ID='423477151081458'
 FACEBOOK_APP_SECRET='2c16203539a13addf1ed141e7a68dbd7'
+
 app = Flask(__name__)
-app.config.from_object(__name__)
+app.config.from_envvar('CONFIG_FILE')
+app.debug=app.config['DEBUG']
 
 
 login_manager = LoginManager()
-
 login_manager.login_view = "login"
 login_manager.login_message = u"Please log in to access this page."
+
+mail=Mail(app)
+
+
 
 class User(UserMixin):
     def __init__(self, name, _id, password,email,activation_hash=None,active=True):
@@ -48,6 +48,7 @@ class User(UserMixin):
 
 @app.route('/')
 def front():
+	app.logger.debug('check')
 	output_review=get_trending_data(3)
 	return render_template('front.html',reviews=output_review)
 
@@ -59,7 +60,7 @@ def about():
 @login_manager.user_loader
 def load_user(_id):
 	client=MongoClient()
-	db=client.leanreviews
+	db=client[app.config['DATABASE']]
 	user=db.users.find({'_id':ObjectId(_id)})
 	try:
 		user=user.next()
@@ -73,12 +74,15 @@ login_manager.setup_app(app)
 @app.route('/google_oauth_callback')
 def google_oauth_callback():
 	client=MongoClient()
-	db=client.leanreviews
+	db=client[app.config['DATABASE']]
 	flow = OAuth2WebServerFlow(client_id='738745937386.apps.googleusercontent.com',
                            client_secret='cIy6tyZyyKXeSc8YfqXWtQtS',
                            scope='https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-                           redirect_uri='http://localhost:5000/google_oauth_callback',
+                           redirect_uri=app.config['HOST']+'/google_oauth_callback',
                            access_type='online')
+
+	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email&client_id=423477151081458&redirect_uri='+app.config['HOST']+'/facebook_oauth_callback'
+
 	code=request.args['code']
 	credentials=flow.step2_exchange(code)
 	http=httplib2.Http()
@@ -96,7 +100,8 @@ def google_oauth_callback():
 				flash('Logged in!')
 				return redirect(url_for('front'))
 			else:
-				return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.')
+				return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.',
+										google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 		except Exception:		
 			_id=db.users.save({'name':content['name'],
 							   'email':content['email'],
@@ -108,16 +113,24 @@ def google_oauth_callback():
 				flash('Logged in!')
 				return redirect(url_for('front'))
 			else:
-				return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes')
+				return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes',
+										google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 	except Exception:
-			return render_template('/signup.html',error='Cannot login now. Some problem on our server. Check back in a few minutes.')
+			return render_template('/signup.html',error='Cannot login now. Some problem on our server. Check back in a few minutes.',
+									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 
 @app.route('/facebook_oauth_callback')
 def facebook_oauth_callback():
+	flow = OAuth2WebServerFlow(client_id='738745937386.apps.googleusercontent.com',
+                           client_secret='cIy6tyZyyKXeSc8YfqXWtQtS',
+                           scope='https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                           redirect_uri=app.config['HOST']+'/google_oauth_callback',
+                           access_type='online')
+	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email&client_id=423477151081458&redirect_uri='+app.config['HOST']+'/facebook_oauth_callback'
 	client=MongoClient()
-	db=client.leanreviews
+	db=client[app.config['DATABASE']]
 	args = dict(client_id=FACEBOOK_APP_ID,
-                redirect_uri='http://localhost:5000/facebook_oauth_callback')
+                redirect_uri=app.config['HOST']+'/facebook_oauth_callback')
 	code=request.args['code']
 	if not code:
 		return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.')
@@ -129,7 +142,8 @@ def facebook_oauth_callback():
 	except Exception as e:
 		app.logger.debug(str(e))
 		#app.logger.debug(response)
-		return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.')
+		return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.',
+								google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 	access_token = response["access_token"][-1]
 	user=None
 	try:
@@ -137,7 +151,8 @@ def facebook_oauth_callback():
 		user=db.users.find({'email':content['email']})
 	except Exception:
 		app.logger.debug('Problem geting user data from facebook')
-		return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.')
+		return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.',
+								google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 	
 	try:
 		user=user.next()
@@ -146,7 +161,8 @@ def facebook_oauth_callback():
 			flash('Logged in!')
 			return redirect(url_for('front'))
 		else:
-			return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.')
+			return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.',
+									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 	except Exception:		
 		_id=db.users.save({'name':content['name'],
 						   'email':content['email'],
@@ -158,16 +174,17 @@ def facebook_oauth_callback():
 			flash('Logged in!')
 			return redirect(url_for('front'))
 		else:
-			return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes')
+			return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes',
+									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 		
 @app.route('/login',methods=['GET','POST'])
 def login():
 	flow = OAuth2WebServerFlow(client_id='738745937386.apps.googleusercontent.com',
                            client_secret='cIy6tyZyyKXeSc8YfqXWtQtS',
                            scope='https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-                           redirect_uri='http://localhost:5000/google_oauth_callback',
+                           redirect_uri=app.config['HOST']+'/google_oauth_callback',
                            access_type='online')
-	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email&client_id=423477151081458&redirect_uri=http://localhost:5000/facebook_oauth_callback'
+	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email&client_id=423477151081458&redirect_uri='+app.config['HOST']+'/facebook_oauth_callback'
 
 
 	if request.method=='GET':
@@ -183,7 +200,7 @@ def login():
 		app.logger.debug('Login Form submitted without fields')
 		return render_template('/signup.html')
 	client=MongoClient()
-	db=client.leanreviews
+	db=client[app.config['DATABASE']]
 	password=hashlib.sha512(SALT+password).hexdigest()
 	user=db.users.find({'name':username,'password':password})
 	try:
@@ -193,7 +210,8 @@ def login():
 			flash('Logged in!')
 			return redirect(url_for('front'))
 		else:
-			return render_template('/signup.html',error='Cannot login. Account still inactive')
+			return render_template('/signup.html',error='Cannot login. Account still inactive',
+									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 	except StopIteration:
 		user=db.users.find({'email':username,'password':password})
 		try:
@@ -203,9 +221,11 @@ def login():
 				flash('Logged in!')
 				return redirect(url_for('front'))
 			else:
-				return render_template('/signup.html',error='Cannot login. Account still inactive')
+				return render_template('/signup.html',error='Cannot login. Account still inactive',
+										google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 		except StopIteration:
-			return render_template('/signup.html',error='Cannot login. Wrong credentials')
+			return render_template('/signup.html',error='Cannot login. Wrong credentials',
+									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 
 @app.route("/logout")
 @login_required
@@ -220,7 +240,7 @@ def activate():
 	if not activation_hash:
 		return render_template('activate.html',message='Sorry account not activated')
 	client=MongoClient()
-	db=client.leanreviews
+	db=client[app.config['DATABASE']]
 	user=db.users.find({'activation_hash':activation_hash})
 	try:
 		user=user.next()
@@ -237,14 +257,15 @@ def signup():
 	flow = OAuth2WebServerFlow(client_id='738745937386.apps.googleusercontent.com',
                            client_secret='cIy6tyZyyKXeSc8YfqXWtQtS',
                            scope='https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-                           redirect_uri='http://localhost:5000/google_oauth_callback',
+                           redirect_uri=app.config['HOST']+'/google_oauth_callback',
                            access_type='online')
-	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email&client_id=423477151081458&redirect_uri=http://localhost:5000/facebook_oauth_callback'
+	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email&client_id=423477151081458&redirect_uri='+app.config['HOST']+'/facebook_oauth_callback'
 
 
 	if request.method=='GET':
 		return render_template('/signup.html',google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 	else:
+		
 		data={}
 		for name,value in dict(request.form).iteritems():
 			data[name]=value[0].lower().strip()
@@ -252,22 +273,22 @@ def signup():
 		if 'username' in data:
 			username=data['username']
 		client=MongoClient()
-		db=client.leanreviews
+		db=client[app.config['DATABASE']]
 		salt='leanreviewactivateusingtoken'
 		activation_hash=hashlib.sha512(salt+data['email']).hexdigest()[10:30]
 		if username:
 			exist_user=db.users.find({'name':username})
 			try:
 				exist_user.next()
-				return render_template('signup.html',signup_error='Username already exists',username=username,email=data['email'])
+				return render_template('signup.html',signup_error='Username already exists',username=username,email=data['email'],
+										google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 			except StopIteration:
 				pass
 		exist_user=db.users.find({'email':data['email']})
 		try:
 			exist_user.next()
-			app.logger.debug(username)
-			app.logger.debug(data['email'])
-			return render_template('signup.html',signup_error='Email already exists',username=username,email=data['email'])
+			return render_template('signup.html',signup_error='Email already exists',username=username,email=data['email'],
+									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 		except StopIteration:
 			pass
 
@@ -277,17 +298,19 @@ def signup():
 					   'activation_hash':activation_hash,
 					   'active':False})
 		#user=User(name=username,email=data['email'],password=data['password'],active=False,id=str(_id))
-		msg = Message('Welcome to Lean Reviews', sender = 'udayj.dev@gmail.com', recipients = [data['email']])
-		mail=Mail(app)
+		msg = Message('Welcome to Lean Reviews', sender = app.config['MAIL_SENDER'], recipients = [data['email']])
 		
-		msg.body = 'Click this link to activate your account http://localhost:5000/activate?hash='+activation_hash
+		
+		msg.body = 'Click this link to activate your account '+app.config['HOST']+'/activate?hash='+activation_hash
 		app.logger.debug('Sending activation email to:'+data['email'])
-		app.logger.debug(activation_hash)
+		#app.logger.debug(activation_hash)
+		#app.logger.debug(str(app.extensions['mail'].server))
 		try:
 			mail.send(msg)
 		except Exception:
 			db.users.remove({'_id':_id})
-			return render_template('signup.html',signup_error='Problem sending email. Account not created. Try again later.',username=username,email=data['email'])
+			return render_template('signup.html',signup_error='Problem sending email. Account not created. Try again later.',
+									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,username=username,email=data['email'])
 		return render_template('checkmail.html')
 
 
@@ -295,6 +318,44 @@ def signup():
 @login_required
 def add_new():
 	return render_template('add_new.html')
+
+@app.route('/edit_review',methods=['GET','POST'])
+@login_required
+def edit_review():
+	if current_user.email!='udayj.dev@gmail.com':
+		return redirect(url_for('front'))
+	if request.method=='GET':
+		_id=request.args.get('id')
+		if not _id:
+			return redirect(url_for('error'))
+		client=MongoClient()
+		db=client[app.config['DATABASE']]
+		review=db.reviews.find({'_id':ObjectId(_id)})
+		review=review.next()
+		app.logger.debug(review['words'])
+		return render_template('edit_review.html',review=review,words=str(review['words']))
+	else:
+		data={}
+		for name,value in dict(request.form).iteritems():
+			data[name]=value[0].lower().strip()
+		client=MongoClient()
+		db=client[app.config['DATABASE']]
+		review=None
+		try:
+			review=db.reviews.find({'_id':ObjectId(data['id'])})
+			review=review.next()	
+		except Exception:
+			js=json.dumps({'success':'false'})
+			resp = Response(js, status=500, mimetype='application/json')
+			return resp
+
+		
+		review['words']=ast.literal_eval(data['review'])
+		db.reviews.save(review)
+		return render_template('edit_review.html',review=review,words=str(review['words']),message="Successfully updated database")
+
+
+	
 
 def truncate_word(word,length):
 	if len(word)>length:
@@ -311,7 +372,7 @@ def category(category):
 		except ValueError:
 			page=1
 	client=MongoClient()
-	db=client.leanreviews
+	db=client[app.config['DATABASE']]
 	collection=db.categories
 	present_category=collection.find({'name':category})
 	try:
@@ -375,7 +436,7 @@ def category(category):
 @app.route('/item')
 def item():
 	client=MongoClient()
-	db=client.leanreviews
+	db=client[app.config['DATABASE']]
 	collection=db.reviews
 	_id=request.args.get('id')
 	review=None
@@ -427,7 +488,6 @@ def item():
 		output_review['upvote']=review['upvote']
 		output_review['downvote']=review['downvote']
 		output_review['description']=review['description']
-		app.logger.debug(output_review)
 		return render_template('item.html',review=output_review)
 	else:
 		page=request.args.get('p')
@@ -491,7 +551,7 @@ def item():
 								length=len(output_review),pagination=pagination,url=request.path,active=active)
 def get_trending_data(count):
 	client=MongoClient()
-	db=client.leanreviews
+	db=client[app.config['DATABASE']]
 	collection=db.categories
 	categories=['books','movies','places','people']
 	review_ids_mixed=[]
@@ -533,7 +593,7 @@ def rate_item():
 	
 	
 	client=MongoClient()
-	db=client.leanreviews
+	db=client[app.config['DATABASE']]
 	app.logger.debug(data)
 	review=None
 	try:
@@ -567,7 +627,7 @@ def review_item():
 	for name,value in dict(request.form).iteritems():
 		data[name]=value[0].lower().strip()
 	client=MongoClient()
-	db=client.leanreviews
+	db=client[app.config['DATABASE']]
 	review=None
 	try:
 		review=db.reviews.find({'_id':ObjectId(data['id'])})
@@ -596,16 +656,16 @@ def process_new_item():
 		else:
 			data[name]=value[0]
 	client=MongoClient()
-	db=client.leanreviews
+	db=client[app.config['DATABASE']]
 	_id=db.reviews.save({'name':data['name'].lower().strip(),
 					 'display_name':data['name'],
-					 'description':data['description'] or '',
-					 'categories':data['category'],
+					 'description':data['description'] if 'description' in data else '',
+					 'categories':data['category'] if 'category' in data else None,
 					 'words':{data['review']:40},
 					 'upvote':0,
 					 'downvote':0})
 	
-	if data['category']:
+	if 'category' in data and data['category'] != '':
 		category=db.categories.find({'name':data['category']})
 		try:
 			category=category.next()
@@ -618,14 +678,17 @@ def process_new_item():
 
 	
 	return redirect(url_for('item',id=str(_id),name=data['name'].lower().strip()))
-if app.debug is not "check":   
-    import logging
-    from logging.handlers import RotatingFileHandler
-    file_handler = RotatingFileHandler('application.log', maxBytes=1024 * 1024 * 100, backupCount=20)
-    file_handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(asctime)s - %(funcName)s - %(levelname)s - %(message)s")
-    file_handler.setFormatter(formatter)
-    app.logger.addHandler(file_handler)
+
+if app.debug is True:   
+	    import logging
+	    from logging.handlers import RotatingFileHandler
+	    file_handler = RotatingFileHandler('/home/uday/code/one_word_virtual/logs/application.log', maxBytes=1024 * 1024 * 100, backupCount=20)
+	    file_handler.setLevel(logging.DEBUG)
+	    formatter = logging.Formatter("%(asctime)s - %(funcName)s - %(levelname)s - %(message)s")
+	    file_handler.setFormatter(formatter)
+	    app.logger.addHandler(file_handler)
+	    app.logger.error(str(app.config))
 
 if __name__=='__main__':
-	app.run(debug=True)
+	app.run()
+	
