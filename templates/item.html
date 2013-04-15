@@ -88,8 +88,9 @@
         <div style="display:none" id="review_words">
           {{review['data']}}
         </div>
-        <div class="span8" id="word_cloud">
+        <div class="span12" id="word_cloud">
         </div>
+        <div class="row">
         <div class="span4" style="position:relative;top:30px;">
           <div class="row">
             <div class="span4">
@@ -114,6 +115,7 @@
           </div>
 
         </div>
+      </div>
 
       </div>
       
@@ -149,23 +151,23 @@
           return;
         window.location='/item?name='+name.value.trim();
     }
-    var fontSize = d3.scale.log().range([10, 100]);
+    var fontSize = d3.scale.log().range([10, 40]);
     var fill = d3.scale.category20();
     function draw_word_cloud(id,review_words){
-     d3.layout.cloud().size([600,450])
+     d3.layout.cloud().size([900,600])
       .words(jQuery.parseJSON($(review_words).html()))
       .font("Impact")
       .fontSize(function(d) { return d.size; })
-      .rotate(function(d) { return ~~(Math.random() * 5) * 05 - 05; })
+      .rotate(function(d) { return ~~(Math.random() * 5) * 10 - 10; })
       .on("end", draw)
       .start();
 
   function draw(words) {
     d3.select(id).append("svg")
-        .attr("width", 600)
-        .attr("height", 450)
+        .attr("width", 900)
+        .attr("height", 600)
       .append("g")
-        .attr("transform", "translate(300,225)")
+        .attr("transform", "translate(450,300)")
       .selectAll("text")
         .data(words)
       .enter().append("text")

@@ -37,13 +37,13 @@ description for review on category, trending, front page - done
 10.review from logged out user - done
 11.activate with correct hash
 12.activate with incorrect hash
-13.get category page - check only items of that category returned
+13.get category page - check only items of that category returned - done
 14.get trending page
 15.get main page
-16.get item page with name only
-17.get item page with id only
-18.get item page with incorrect name
+16.get item page with name only - done
+17.get item page with id only - done
+18.get item page with incorrect name - done
 19.submit review from logged in user - updates in db, output message to user - done
 20.submit vote from logged in user - updates in db, output to user - done
-21.submit new review from logged in user - updates in db, output to logged in user
-22.get item page with multiple entries - check pagination logic
+21.submit new review from logged in user - updates in db, output to logged in user - done
+22.get item page with multiple entries - check pagination logic - done - pagination logic not checked

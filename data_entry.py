@@ -81,3 +81,33 @@ def seed_categories():
 	for review in collection.find():
 		category=review['categories']
 		categories.update({'name':category},{'$push':{'review_ids':review['_id']}})
+def seed_content():
+	files=['american_actors.txt','books_new.txt','movies_new.txt','places_new.txt']
+	types=['people','books','movies','places']
+	client=MongoClient()
+	db=client.leanreviews
+	collection=db.reviews
+	counter=0
+	for genre in files:
+		new_content=codecs.open('data/'+genre,'r','utf-8')
+		while True:
+			content=new_content.readline()
+			if not content:
+				break
+			content=content.split('\t')
+			name=content[0]
+			review={}
+			review['name']=normalize(name)
+			review['display_name']=name
+			review['description']=''
+			review['upvote']=randint(10,300)
+			review['downvote']=randint(10,35)
+			review['categories']=types[counter]
+			review['created_by']='admin'
+			review['creation_time']=datetime.datetime.utcnow()
+			review['words']={}
+			for word in content[1:]:
+				review['words'][word.strip().replace('.','')]=randint(10,150)
+			collection.save(review)
+		counter+=1
+		new_content.close()

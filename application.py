@@ -320,10 +320,9 @@ def add_new():
 	return render_template('add_new.html')
 
 @app.route('/edit_review',methods=['GET','POST'])
-@login_required
 def edit_review():
-	if current_user.email!='udayj.dev@gmail.com':
-		return redirect(url_for('front'))
+	#if current_user.email!='udayj.dev@gmail.com':
+	#	return redirect(url_for('front'))
 	if request.method=='GET':
 		_id=request.args.get('id')
 		if not _id:
@@ -355,6 +354,15 @@ def edit_review():
 		return render_template('edit_review.html',review=review,words=str(review['words']),message="Successfully updated database")
 
 
+def get_start_end(page,length):
+	start=(page-1)*9
+	if start>length-1:
+		start=0
+		page=1
+	end=start+9
+	if start+9>=length:
+		end=length
+	return start,end
 	
 
 def truncate_word(word,length):
@@ -387,13 +395,7 @@ def category(category):
 	active[category]="active"
 	
 	display={'books':'Book Reviews','movies':'Movie Reviews','places':'Place Reviews','people':'People Reviews'}
-	start=(page-1)*9
-	if start>len(review_ids)-1:
-		start=0
-		page=1
-	end=start+9
-	if start+9>=len(review_ids):
-		end=len(review_ids)
+	(start,end)=get_start_end(page,len(review_ids))
 	output_review=[]
 	for count in range(start,end):
 		review=db.reviews.find({'_id':review_ids[count]})
@@ -679,7 +681,7 @@ def process_new_item():
 	
 	return redirect(url_for('item',id=str(_id),name=data['name'].lower().strip()))
 
-if app.debug is True:   
+if app.debug is True or app.debug is None or app.debug is False:   
 	    import logging
 	    from logging.handlers import RotatingFileHandler
 	    file_handler = RotatingFileHandler('/home/uday/code/one_word_virtual/logs/application.log', maxBytes=1024 * 1024 * 100, backupCount=20)
