@@ -1,60 +1,6 @@
+{%extends "base.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Lean Reviews - quick reviews for almost anything</title>
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <!-- Le styles -->
-    <link href="/static/stylesheets/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/stylesheets/front.css" rel="stylesheet">
-    <link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css">       
-
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="../assets/js/html5shiv.js"></script>
-    <![endif]-->
-
-    <!-- Fav and touch icons -->
-    
-  </head>
-
-  <body>
-
-    <div class="container">
-
-      <div class="masthead">
-        <h3 class="muted">Lean Reviews</h3>
-        <div class="subnav">
-          <ul class="nav nav-pills" >
-                <li><a href="/">Home</a></li>
-                <li id="books" ><a href="/browse/books">Books</a></li>
-                <li id="movies" ><a href="/browse/movies">Movies</a></li>
-                <li id="places" ><a href="/browse/places">Places</a></li>
-                <li id="people" ><a href="/browse/people">People</a></li>
-                <li id="trending" class="active"><a href="/trending">Trending</a></li>
-                <li id="about"><a href="/about">About</a></li>
-                  {% if not current_user.email %}
-                <li class="pull-right"><a href="/signup">Login</a></li>
-                <li class="pull-right"><a href="/signup">SignUp</a></li>
-                
-                {% else %}
-                <li class="pull-right"><a href="/logout">Logout</a></li>
-                <span class="pull-right" style="position:relative;top:7px;"> Hi,
-                  {% if current_user.name %}
-                  {{current_user.name}}
-                  {% else %}
-                  {{current_user.email}}
-                  {% endif %}
-                </span>
-                
-                {% endif %}
-              </ul>
-            </div>
-      </div>
-
+{% block content %}
       <!-- Jumbotron -->
         <div class="row">
         
@@ -67,7 +13,6 @@
 
       
     </div>
-  </div>
   </div>
   <br>
 
@@ -86,11 +31,11 @@
       
         
       <a href="{{review['url']}}">
-        <div class="span4" id="review{{review_counter}}">
+        <div class="span4" id="review{{review_counter}}" style="background-color:#F2F2F2">
           <div style="display:none" id="review{{review_counter}}words">
             {{review['data']}}
           </div>
-           <h2 style="color:#0072E6" title="{{review['title_name']}}">{{review['name']}}</h2>
+           <h2 style="color:#0072E6;text-align:center" title="{{review['title_name']}}">{{review['name']}}</h2>
            {% if not review['description'] or review['description']=='' %}
           <br>
           {% endif %}
@@ -106,6 +51,7 @@
     {% endfor %}
         </div>       
         {% if length>3 %}
+        <hr style="margin-top:3px;margin-bottom:3px;">
         <div class="row">
   
     {% set review_counter=4 %}
@@ -113,11 +59,11 @@
       
         
       <a href="{{review['url']}}">
-        <div class="span4" id="review{{review_counter}}">
+        <div class="span4" id="review{{review_counter}}" style="background-color:#F2F2F2">
           <div style="display:none" id="review{{review_counter}}words">
             {{review['data']}}
           </div>
-          <h2 style="color:#0072E6" title="{{review['title_name']}}">{{review['name']}}</h2>
+          <h2 style="color:#0072E6;text-align:center" title="{{review['title_name']}}">{{review['name']}}</h2>
            {% if not review['description'] or review['description']=='' %}
           <br>
           {% endif %}
@@ -133,6 +79,7 @@
         </div>     
         {% endif %}  
         {% if length>6 %}
+        <hr style="margin-top:3px;margin-bottom:3px;">
         <div class="row">
   
     {% set review_counter=7 %}
@@ -140,11 +87,11 @@
       
         
       <a href="{{review['url']}}">
-        <div class="span4" id="review{{review_counter}}">
+        <div class="span4" id="review{{review_counter}}" style="background-color:#F2F2F2">
           <div style="display:none" id="review{{review_counter}}words">
             {{review['data']}}
           </div>
-          <h2 style="color:#0072E6" title="{{review['title_name']}}">{{review['name']}}</h2>
+          <h2 style="color:#0072E6;text-align:center" title="{{review['title_name']}}">{{review['name']}}</h2>
            {% if not review['description'] or review['description']=='' %}
           <br>
           {% endif %}
@@ -164,22 +111,9 @@
 
 
       <hr>
-      
-      <div class="footer">
-        <p>&copy; LeanReviews.com 2013. All rights reserved.</p>
-      </div>
+{% endblock %}
 
-    </div> <!-- /container -->
-
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/static/javascript/items.js"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
-    
-    <script src="/static/javascript/d3.js"> </script>
-    <script src="/static/javascript/d3.layout.cloud.js"> </script>
+{% block javascript %}
     <script>
     $(document).ready(function() {
     $("input#search").autocomplete({
@@ -192,10 +126,12 @@
           return;
         window.location='/item?name='+name.value.trim();
     }
-    var fontSize = d3.scale.log().range([10, 100]);
+    var fontSize = d3.scale.linear()
+                  .domain([0,160])
+                  .range([10, 80]);
     var fill = d3.scale.category20();
     function draw_word_cloud(id){
-     d3.layout.cloud().size([300, 300])
+     d3.layout.cloud().size([300, 200])
       .words(jQuery.parseJSON($(id+'words').html()))
       /*.words([
         "Hello", "world", "normally", "you", "want", "more", "words",
@@ -205,9 +141,9 @@
         "than", "this"].map(function(d) {
         return {text: d, size: 10 + Math.random() * 90};
       }))*/
-      .font("Impact")
+      .font("sans-serif")
       .timeInterval(Infinity)
-      .fontSize(function(d) { return d.size; })
+      .fontSize(function(d) { return parseInt(fontSize(d.size)); })
       .rotate(function(d) { return ~~(Math.random() * 5) * 04 - 04; })
       .on("end", draw)
       .start();
@@ -215,14 +151,14 @@
   function draw(words) {
     d3.select(id).append("svg")
         .attr("width", 300)
-        .attr("height", 300)
+        .attr("height", 200)
       .append("g")
-        .attr("transform", "translate(150,150)")
+        .attr("transform", "translate(150,100)")
       .selectAll("text")
         .data(words)
       .enter().append("text")
         .style("font-size", function(d) { return d.size + "px"; })
-        .style("font-family", "Impact")
+        .style("font-family", "sans-serif")
         .style("fill", function(d, i) { return fill(i); })
         .attr("text-anchor", "middle")
         .attr("transform", function(d) {
@@ -239,14 +175,8 @@ for(var i=0;i<9;i++)
 
 
      </script>
+{% endblock %}
 
-  </body>
-</html>
-
-<!--
-3 model plate - 4 Pc.
-3 Model box   - 4 Pc.
-6A Switch - 4 Pc.-->
 <!--
   .words([
         "Hello", "world", "normally", "you", "want", "more", "words",

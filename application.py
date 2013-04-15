@@ -50,7 +50,7 @@ class User(UserMixin):
 def front():
 	app.logger.debug('check')
 	output_review=get_trending_data(3)
-	return render_template('front.html',reviews=output_review)
+	return render_template('front.html',reviews=output_review,active='front')
 
 @app.route('/about')
 def about():
@@ -107,6 +107,9 @@ def google_oauth_callback():
 							   'email':content['email'],
 							   'password':'',
 							   'activation_hash':'',
+							   'reviews_submitted':0,
+							   'reviews_created':0,
+							   'kudos':0,
 							   'active':True})
 			ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(_id))
 			if login_user(ret_user):
@@ -168,6 +171,9 @@ def facebook_oauth_callback():
 						   'email':content['email'],
 						   'password':'',
 						   'activation_hash':'',
+						   'reviews_submitted':0,
+						   'reviews_created':0,
+						   'kudos':0,
 						   'active':True})
 		ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(_id))
 		if login_user(ret_user):
@@ -188,7 +194,7 @@ def login():
 
 
 	if request.method=='GET':
-		return render_template('/signup.html',google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
+		return render_template('/signup.html',google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,active='login')
 	data={}
 	for name,value in dict(request.form).iteritems():
 		data[name]=value[0]
@@ -211,7 +217,7 @@ def login():
 			return redirect(url_for('front'))
 		else:
 			return render_template('/signup.html',error='Cannot login. Account still inactive',
-									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
+									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,active='login')
 	except StopIteration:
 		user=db.users.find({'email':username,'password':password})
 		try:
@@ -222,10 +228,10 @@ def login():
 				return redirect(url_for('front'))
 			else:
 				return render_template('/signup.html',error='Cannot login. Account still inactive',
-										google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
+										google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,active='login')
 		except StopIteration:
 			return render_template('/signup.html',error='Cannot login. Wrong credentials',
-									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
+									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,active='login')
 
 @app.route("/logout")
 @login_required
@@ -233,6 +239,24 @@ def logout():
 	logout_user()
 	flash("Logged out!")
 	return redirect(url_for('front'))
+
+@app.route('/profile')
+def profile():
+	_id=request.args.get('id')
+	name=request.args.get('name')
+	client=MongoClient()
+	db=client[app.config['DATABASE']]
+	if not _id:
+		return render_template('error.html')
+	user=db.users.find({'_id':ObjectId(_id)})
+	try:
+		user=user.next()
+	except StopIteration:
+		return render_template('error.html')
+	kudos=user['kudos']
+	reviews_submitted=user['reviews_submitted']
+	reviews_created=user['reviews_created']
+	return render_template('profile.html',user=user)
 
 @app.route('/activate')
 def activate():
@@ -252,6 +276,7 @@ def activate():
 	except StopIteration:
 		return render_template('activate.html',message='Sorry account not activated')
 
+
 @app.route('/signup',methods=['GET','POST'])
 def signup():
 	flow = OAuth2WebServerFlow(client_id='738745937386.apps.googleusercontent.com',
@@ -263,7 +288,7 @@ def signup():
 
 
 	if request.method=='GET':
-		return render_template('/signup.html',google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
+		return render_template('/signup.html',google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,active='signup')
 	else:
 		
 		data={}
@@ -276,19 +301,12 @@ def signup():
 		db=client[app.config['DATABASE']]
 		salt='leanreviewactivateusingtoken'
 		activation_hash=hashlib.sha512(salt+data['email']).hexdigest()[10:30]
-		if username:
-			exist_user=db.users.find({'name':username})
-			try:
-				exist_user.next()
-				return render_template('signup.html',signup_error='Username already exists',username=username,email=data['email'],
-										google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
-			except StopIteration:
-				pass
+		
 		exist_user=db.users.find({'email':data['email']})
 		try:
 			exist_user.next()
 			return render_template('signup.html',signup_error='Email already exists',username=username,email=data['email'],
-									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
+									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,active='signup')
 		except StopIteration:
 			pass
 
@@ -296,6 +314,9 @@ def signup():
 					   'email':data['email'],
 					   'password':hashlib.sha512(SALT+data['password']).hexdigest(),
 					   'activation_hash':activation_hash,
+					   'reviews_submitted':0,
+					   'reviews_created':0,
+					   'kudos':0,
 					   'active':False})
 		#user=User(name=username,email=data['email'],password=data['password'],active=False,id=str(_id))
 		msg = Message('Welcome to Lean Reviews', sender = app.config['MAIL_SENDER'], recipients = [data['email']])
@@ -310,7 +331,8 @@ def signup():
 		except Exception:
 			db.users.remove({'_id':_id})
 			return render_template('signup.html',signup_error='Problem sending email. Account not created. Try again later.',
-									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,username=username,email=data['email'])
+									google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,username=username,email=data['email'],
+									active='signup')
 		return render_template('checkmail.html')
 
 
@@ -393,6 +415,7 @@ def category(category):
 	for active_category in active_categories:
 		active[active_category]="inactive"
 	active[category]="active"
+	active=category
 	
 	display={'books':'Book Reviews','movies':'Movie Reviews','places':'Place Reviews','people':'People Reviews'}
 	(start,end)=get_start_end(page,len(review_ids))
@@ -580,7 +603,7 @@ def get_trending_data(count):
 @app.route('/trending')
 def trending():
 	output_review=get_trending_data(9)
-	return render_template('trending.html',reviews=output_review,length=9)
+	return render_template('trending.html',reviews=output_review,length=9,active='trending')
 
 @app.route('/rate_item',methods=['POST'])
 @login_required
@@ -614,6 +637,10 @@ def rate_item():
 	else:
 		review['downvote']=review['downvote']+1
 		db.reviews.save(review)
+	user=db.users.find({'_id':ObjectId(current_user.id)})
+	user=user.next()
+	user['kudos']=user['kudos']+1
+	db.users.save(user)
 
 	js=json.dumps({'success':'success'})
 
@@ -643,6 +670,11 @@ def review_item():
 	else:
 		review['words'][data['review']]=1
 	db.reviews.save(review)
+	user=db.users.find({'_id':ObjectId(current_user.id)})
+	user=user.next()
+	user['kudos']=user['kudos']+1
+	user['reviews_submitted']=user['reviews_submitted']+1
+	db.users.save(user)
 	js=json.dumps({'success':'success'})
 
 	resp = Response(js, status=200, mimetype='application/json')
@@ -677,6 +709,11 @@ def process_new_item():
 			category={'name':data['category'],'review_ids':[_id]}
 			db.categories.save(category)
 
+	user=db.users.find({'_id':ObjectId(current_user.id)})
+	user=user.next()
+	user['kudos']=user['kudos']+1
+	user['reviews_created']=user['reviews_created']+1
+	db.users.save(user)
 
 	
 	return redirect(url_for('item',id=str(_id),name=data['name'].lower().strip()))

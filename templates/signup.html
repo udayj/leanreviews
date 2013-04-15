@@ -1,60 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Lean Reviews - quick reviews for almost anything</title>
-    <meta name="description" content="">
-    <meta name="author" content="">
+{% extends "base.html" %}
 
-    <!-- Le styles -->
-    <link href="/static/stylesheets/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/stylesheets/front.css" rel="stylesheet">
-    <link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css">
-       
-
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="../assets/js/html5shiv.js"></script>
-    <![endif]-->
-
-    <!-- Fav and touch icons -->
-    
-  </head>
-
-  <body>
-
-    <div class="container">
-
-      <div class="masthead">
-        <h3 class="muted">Lean Reviews</h3>
-         <div class="subnav">
-          <ul class="nav nav-pills" >
-                <li><a href="/">Home</a></li>
-                <li id="books" ><a href="/browse/books">Books</a></li>
-                <li id="movies" ><a href="/browse/movies">Movies</a></li>
-                <li id="places" ><a href="/browse/places">Places</a></li>
-                <li id="people" ><a href="/browse/people">People</a></li>
-                <li id="trending"><a href="/trending">Trending</a></li>
-                <li id="about"><a href="/about">About</a></li>
-                  {% if not current_user.email %}
-                <li class="active pull-right"><a href="/signup">Login</a></li>
-                <li class="pull-right"><a href="/signup">SignUp</a></li>
-                
-                {% else %}
-                <li class="pull-right"><a href="/logout">Logout</a></li>
-                <span class="pull-right" style="position:relative;top:7px;"> Hi,
-                  {% if current_user.name %}
-                  {{current_user.name}}
-                  {% else %}
-                  {{current_user.email}}
-                  {% endif %}
-                </span>
-                
-                {% endif %}
-              </ul>
-            </div>
-      </div>
-
+{% block content %}
       <!-- Jumbotron -->
       <div class="row">
         
@@ -92,10 +38,10 @@
               </div>
               <div class="control-group">
                 
-                  <label class="control-label" for="username" >Choose Username</label>
+                  <label class="control-label" for="username" >Name</label>
                   <div class="controls">
                   <input type="text" id="username" name="username" placeholder="{{username}}" value="{{username}}">
-                  <p class="help-block">This is optional</p>
+                  
                 </div>
               </div>
               <div class="control-group">
@@ -154,21 +100,9 @@
       
 
       <hr>
+      {% endblock %}
 
-      <div class="footer">
-        <p>&copy; LeanReviews.com 2013. All rights reserved.</p>
-      </div>
-
-    </div> <!-- /container -->
-
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-     <script src="/static/javascript/items.js"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
-    <script src="/static/javascript/d3.js"> </script>
-    <script src="/static/javascript/d3.layout.cloud.js"> </script>
+{% block javascript %}
     <script>
     $(document).ready(function() {
     $("input#search").autocomplete({
@@ -179,7 +113,7 @@
       var email=$('#email').val()
       var password=$('#password').val();
       var confirm_password=$('#confirm_password').val();
-      if(email==null || email.trim()=="" || password==null || password.trim()=="")
+      if(email==null || email.trim()=="" || password==null || password.trim()=="" || username==null || username.trim()=="")
       {
         alert("Email and password cannot be empty");
         return false;
@@ -261,11 +195,5 @@ function login()
   $('#login').submit();
 }
      </script>
+{% endblock %}
 
-  </body>
-</html>
-
-<!--
-3 model plate - 4 Pc.
-3 Model box   - 4 Pc.
-6A Switch - 4 Pc.-->

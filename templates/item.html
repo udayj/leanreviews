@@ -1,64 +1,9 @@
-
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Lean Reviews - quick reviews for almost anything</title>
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <!-- Le styles -->
-    <link href="/static/stylesheets/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/stylesheets/front.css" rel="stylesheet">
-    <link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css">
-       
-
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="../assets/js/html5shiv.js"></script>
-    <![endif]-->
-
-    <!-- Fav and touch icons -->
-    
-  </head>
-
-  <body>
-
-    <div class="container">
-
-      <div class="masthead">
-        <h3 class="muted">Lean Reviews</h3>
-      <div class="subnav">
-          <ul class="nav nav-pills" >
-                <li><a href="/">Home</a></li>
-                <li id="books" ><a href="/browse/books">Books</a></li>
-                <li id="movies" ><a href="/browse/movies">Movies</a></li>
-                <li id="places" ><a href="/browse/places">Places</a></li>
-                <li id="people" ><a href="/browse/people">People</a></li>
-                <li id="trending"><a href="/trending">Trending</a></li>
-                <li id="about"><a href="/about">About</a></li>
-                  {% if not current_user.email %}
-                <li class="pull-right"><a href="/signup">Login</a></li>
-                <li class="pull-right"><a href="/signup">SignUp</a></li>
-                
-                {% else %}
-                <li class="pull-right"><a href="/logout">Logout</a></li>
-                <span class="pull-right" style="position:relative;top:7px;"> Hi,
-                  {% if current_user.name %}
-                  {{current_user.name}}
-                  {% else %}
-                  {{current_user.email}}
-                  {% endif %}
-                </span>
-                
-                {% endif %}
-              </ul>
-            </div>
-      </div>
+{% extends "base.html" %}
+{% block content %}
 
       <!-- Jumbotron -->
       <div class="row">
-        
+        <div id="userid" style="display:none">{{current_user.id}}</div>
         <div class="span6" style="position:relative;top:15px;">
           
           <input id="search" name="name" class="span5" type="text" onkeydown="if (event.keyCode==13) { search();}"
@@ -75,7 +20,7 @@
         <div class="row">
           <div class="span12">
 
-      	   <h2 style="display:inline"> {{review['name']}} </h2>  <span class="btn btn-success" style="position:relative;top:-5px">{{review['upvote']}} Up votes</span>  <span class="btn btn-warning" style="position:relative;top:-5px">
+      	   <h2 style="display:inline"> {{review['name']}} </h2> <br><br> <span class="btn btn-success" style="position:relative;top:-5px">{{review['upvote']}} Up votes</span>  <span class="btn btn-warning" style="position:relative;top:-5px">
            {{review['downvote']}} Down votes</span>
            <br>
            <h4> {{review['description']}} - Still confused about what this refers to? Find out more on <a href="http://www.google.com/search?q={{review['name']}}">Google</a>.
@@ -88,7 +33,7 @@
         <div style="display:none" id="review_words">
           {{review['data']}}
         </div>
-        <div class="span12" id="word_cloud">
+        <div class="span8" id="word_cloud">
         </div>
         <div class="row">
         <div class="span4" style="position:relative;top:30px;">
@@ -123,22 +68,14 @@
     </div>
 
       <hr>
-
+{% endblock %}
       <div class="footer">
         <p>&copy; LeanReviews.com 2013. All rights reserved.</p>
       </div>
 
     </div> <!-- /container -->
 
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-     <script src="/static/javascript/items.js"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
-    
-    <script src="/static/javascript/d3.js"> </script>
-    <script src="/static/javascript/d3.layout.cloud.js"> </script>
+{% block javascript %}
     <script>
     $(document).ready(function() {
     $("input#search").autocomplete({
@@ -151,28 +88,41 @@
           return;
         window.location='/item?name='+name.value.trim();
     }
-    var fontSize = d3.scale.log().range([10, 40]);
+
     var fill = d3.scale.category20();
+    dataset=jQuery.parseJSON($(review_words).html());
+    values=[]
+    for(var key in dataset)
+    {
+      
+
+      values.push(dataset[key]['size']);
+    }
+
+    
     function draw_word_cloud(id,review_words){
-     d3.layout.cloud().size([900,600])
+      var fontSize = d3.scale.linear()
+                   .domain([5, d3.max(values)])
+                  .range([10, 70]);
+     d3.layout.cloud().size([600,450])
       .words(jQuery.parseJSON($(review_words).html()))
       .font("Impact")
-      .fontSize(function(d) { return d.size; })
+      .fontSize(function(d) { return parseInt(fontSize(d.size)); })
       .rotate(function(d) { return ~~(Math.random() * 5) * 10 - 10; })
       .on("end", draw)
       .start();
 
   function draw(words) {
     d3.select(id).append("svg")
-        .attr("width", 900)
-        .attr("height", 600)
+        .attr("width", 600)
+        .attr("height", 450)
       .append("g")
-        .attr("transform", "translate(450,300)")
+        .attr("transform", "translate(280,215)")
       .selectAll("text")
         .data(words)
       .enter().append("text")
         .style("font-size", function(d) { return d.size + "px"; })
-        .style("font-family", "Impact")
+        .style("font-family", "sans-serif")
         .style("fill", function(d, i) { return fill(i); })
         .attr("text-anchor", "middle")
         .attr("transform", function(d) {
@@ -181,7 +131,50 @@
         .text(function(d) { return d.text; });
   }
 }
-draw_word_cloud("#word_cloud","#review_words");
+    var scale=d3.scale.linear()
+              .domain([0,160])
+              .range([0,400])
+    draw_word_cloud("#word_cloud","#review_words");
+    var chart = d3.select("#word_cloud").append("div")
+    .attr("class", "chart")
+    .style('font-size','17px')
+    
+    .text('Review Frequencies')
+    
+    var data=jQuery.parseJSON($('#review_words').html())
+    chart.selectAll("div")
+    .data(dataset)
+    .enter().append("div")
+    .attr('id',function(d) {return '123'+d['text'].replace(new RegExp(" ","g"),'-');})
+    
+
+    for(var value in dataset)
+    {
+      /* d3.select('#123'+dataset[value]['text'])
+      .append("div")
+      .style("display","inline")
+      .style("width", function(d) { return parseInt(scale(d['size'])) + "px"; })
+      .attr('title',function(d){ return d['text'];})
+      .text(function(d) { return d['size']; })
+      .style("font-size","10px");*/
+       /*d3.select('#123'+dataset[value]['text'])
+      .append("div")
+      .style("display","inline")
+      .style("width", parseInt(scale(dataset[value]['size'])) + "px")
+      .attr('title',dataset[value]['text'])
+      .text(dataset[value]['size'])
+      .style("font-size","10px");*/
+
+      $('#123'+dataset[value]['text'].replace(new RegExp(" ","g"),'-')).append("<div class='span5' style='display:inline;font-size:10px;width:"+
+        parseInt(scale(dataset[value]['size']))+"px' title='"+dataset[value]['text']+"'></div>");
+
+      $('#123'+dataset[value]['text'].replace(new RegExp(" ","g"),'-')).append("<span style='position:relative;top:-7px;font-size:13px'>"+dataset[value]['text']+"</span><br>");
+      
+      
+    }
+    
+    
+
 
      </script>
      <script>
@@ -201,8 +194,9 @@ draw_word_cloud("#word_cloud","#review_words");
       window.location.href="/signup";
     }
     else{
+    var userid=$('#userid').html();
     $('#thanks_vote').css('display','');
-    $('#thanks_vote').html('Thanks for your vote.');
+    $('#thanks_vote').html('Thanks for your vote. You just earned a <a href="/profile?id='+userid+'">kudo</a>');
   }
 },
   fail: function()
@@ -245,8 +239,9 @@ function send_review(id)
 
     }
     else{
+      var userid=$('#userid').html();
     $('#thanks_review').css('display','');
-    $('#thanks_review').html('Thanks for your review.');
+    $('#thanks_review').html('Thanks for your review. You just earned a <a href="/profile?id='+userid+'">kudo</a>');
   }
   },
   fail: function()
@@ -261,8 +256,8 @@ function send_review(id)
 });
 }
 </script>
-  </body>
-</html>
+{% endblock %}
+
 
 <!--
 3 model plate - 4 Pc.
