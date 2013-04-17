@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
+
       <!-- Jumbotron -->
       <div class="row">
         <div id="userid" style="display:none">{{current_user.id}}</div>
@@ -26,6 +27,7 @@
            <h4> {{review['description']}} - Still confused about what this refers to? Find out more on <a href="http://www.google.com/search?q={{review['name']}}">Google</a>.
             <br>
             Can't find what you are looking for? Add a new review <a href="/add_new">here</a>
+
            </h4>
       </div>
     </div>
@@ -56,6 +58,9 @@
             </div>
             <br>
             <div class="span4" id="thanks_review" style="display:none">
+            </div>
+            <div class="span4" id="share_fb" onclick="create_png('{{review['id']}}')">
+              Share on Facebook
             </div>
           </div>
 
@@ -98,7 +103,7 @@
 
       values.push(dataset[key]['size']);
     }
-
+var words_main=[];
     
     function draw_word_cloud(id,review_words){
       var fontSize = d3.scale.linear()
@@ -113,10 +118,12 @@
       .start();
 
   function draw(words) {
+    words_main=words;
     d3.select(id).append("svg")
         .attr("width", 600)
         .attr("height", 450)
       .append("g")
+        .attr("id","word_reviews")
         .attr("transform", "translate(280,215)")
       .selectAll("text")
         .data(words)
@@ -129,6 +136,7 @@
           return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
         })
         .text(function(d) { return d.text; });
+    $('#word_reviews').append('<div class="fb-like" data-href="http://3x9t.localtunnel.com" data-send="false" data-width="450" data-show-faces="false"></div>');
   }
 }
     var scale=d3.scale.linear()
@@ -138,7 +146,6 @@
     var chart = d3.select("#word_cloud").append("div")
     .attr("class", "chart")
     .style('font-size','17px')
-    
     .text('Review Frequencies')
     
     var data=jQuery.parseJSON($('#review_words').html())
@@ -172,7 +179,61 @@
       
       
     }
+    function create_png(id)
+    {
+    var canvas = document.createElement("canvas"),
+      c = canvas.getContext("2d");
+  canvas.width = 600;
+  canvas.height = 450;
+  c.translate(600 >> 1, 450 >> 1);
+  c.scale(scale, scale);
+  words_main.forEach(function(word, i) {
+    c.save();
+    c.translate(word.x, word.y);
+    c.rotate(word.rotate * Math.PI / 180);
+    c.textAlign = "center";
+    c.fillStyle = fill(word.text.toLowerCase());
+    c.font = word.size + "px " + word.font;
+    c.fillText(word.text, 0, 0);
+    c.restore();
+  });
+  var image=canvas.toDataURL("image/png");
+  //alert(image);
+  var pos=image.indexOf(",");
+  image=image.substr(pos+1);
+  //alert(image);
+
+        $.ajax({
+  type: "POST",
+  url: "/share_facebook",
+  data: {id:id,image:image},
+  
+  success: function(data)
+  {
     
+    if(!data.success)
+    {
+      
+      window.location.href="/signup";
+    }
+    else{
+    var userid=$('#userid').html();
+    $('#thanks_vote').css('display','');
+    $('#thanks_vote').html('Thanks for sharing it with your friends.');
+  }
+},
+  fail: function()
+  {
+    $('#thanks_vote').css('display','');
+    $('#thanks_vote').html('Can\'t share. Login via facebook here to grant permission to share.');
+    
+  }
+}).done(function( msg ) {
+ // document.getElementById("user_tips").value="";
+  //alert("Thanks for helping us improve!");
+});
+     
+  }
     
 
 

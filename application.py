@@ -13,7 +13,9 @@ import httplib2
 import urllib
 import cgi
 import ast
-
+import base64
+import codecs
+import urllib2
 
 
 SECRET_KEY='SECRET'
@@ -35,13 +37,15 @@ mail=Mail(app)
 
 
 class User(UserMixin):
-    def __init__(self, name, _id, password,email,activation_hash=None,active=True):
+    def __init__(self, name, _id, password,email,activation_hash=None,active=True,access_token=None,fb_id=None):
         self.name = name
         self.id = _id
         self.active = active
         self.password=password
         self.email=email
         self.activation_hash=activation_hash
+        self.access_token=access_token
+        self.fb_id=fb_id
 
     def is_active(self):
         return self.active
@@ -64,7 +68,8 @@ def load_user(_id):
 	user=db.users.find({'_id':ObjectId(_id)})
 	try:
 		user=user.next()
-		ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']))
+		ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']),
+					access_token=user['access_token'],fb_id=user['fb_id'])
 		return ret_user
 	except StopIteration:
 		return None
@@ -129,7 +134,7 @@ def facebook_oauth_callback():
                            scope='https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
                            redirect_uri=app.config['HOST']+'/google_oauth_callback',
                            access_type='online')
-	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email&client_id=423477151081458&redirect_uri='+app.config['HOST']+'/facebook_oauth_callback'
+	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email,publish_actions&client_id=423477151081458&redirect_uri='+app.config['HOST']+'/facebook_oauth_callback'
 	client=MongoClient()
 	db=client[app.config['DATABASE']]
 	args = dict(client_id=FACEBOOK_APP_ID,
@@ -141,13 +146,14 @@ def facebook_oauth_callback():
 	args["code"] = code
 	response=None
 	try:
-		response = cgi.parse_qs(urllib.urlopen("https://graph.facebook.com/oauth/access_token?" +urllib.urlencode(args)).read()+"&scope=email")
+		response = cgi.parse_qs(urllib.urlopen("https://graph.facebook.com/oauth/access_token?" +urllib.urlencode(args)).read()+"&scope=email,publish_actions")
 	except Exception as e:
 		app.logger.debug(str(e))
 		#app.logger.debug(response)
 		return render_template('/signup.html',error='Cannot login. Some problem on our server. Check back in a few minutes.',
 								google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login)
 	access_token = response["access_token"][-1]
+	app.logger.debug(access_token)
 	user=None
 	try:
 		content = json.load(urllib.urlopen("https://graph.facebook.com/me?" +urllib.urlencode(dict(access_token=access_token))))
@@ -159,7 +165,8 @@ def facebook_oauth_callback():
 	
 	try:
 		user=user.next()
-		ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(user['_id']))
+		ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(user['_id']),
+					access_token=access_token,fb_id=content['id'])
 		if login_user(ret_user):
 			flash('Logged in!')
 			return redirect(url_for('front'))
@@ -174,8 +181,10 @@ def facebook_oauth_callback():
 						   'reviews_submitted':0,
 						   'reviews_created':0,
 						   'kudos':0,
+						   'access_token':access_token,
+						   'fb_id':content['id'],
 						   'active':True})
-		ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(_id))
+		ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(_id),access_token=access_token,fb_id=content['id'])
 		if login_user(ret_user):
 			flash('Logged in!')
 			return redirect(url_for('front'))
@@ -190,7 +199,7 @@ def login():
                            scope='https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
                            redirect_uri=app.config['HOST']+'/google_oauth_callback',
                            access_type='online')
-	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email&client_id=423477151081458&redirect_uri='+app.config['HOST']+'/facebook_oauth_callback'
+	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email,publish_actions&client_id=423477151081458&redirect_uri='+app.config['HOST']+'/facebook_oauth_callback'
 
 
 	if request.method=='GET':
@@ -284,7 +293,7 @@ def signup():
                            scope='https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
                            redirect_uri=app.config['HOST']+'/google_oauth_callback',
                            access_type='online')
-	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email&client_id=423477151081458&redirect_uri='+app.config['HOST']+'/facebook_oauth_callback'
+	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email,publish_actions&client_id=423477151081458&redirect_uri='+app.config['HOST']+'/facebook_oauth_callback'
 
 
 	if request.method=='GET':
@@ -599,6 +608,32 @@ def get_trending_data(count):
 							  'description':description,'title_name':review['display_name'],
 							  'url':'/item?name='+review['name']+'&id='+str(review['_id'])})
 	return output_review
+
+@app.route('/share_facebook',methods=['POST'])
+def share_facebook():
+	data={}
+	for name,value in dict(request.form).iteritems():
+		data[name]=value[0]
+	image=data['image']
+	image=base64.decodestring(image)
+	f=open('data/'+data['id']+'.png','w')
+	f.write(image)
+	f.close()
+	access_token=current_user.access_token
+	app.logger.debug(access_token)
+	values=([('message','check-----from application')
+			])
+	app.logger.debug(current_user.fb_id)
+	url='https://graph.facebook.com/'+current_user.fb_id+'/feed'
+	data = urllib.urlencode(values)
+	req = urllib2.Request(url, data)
+	response = urllib2.urlopen(req)
+	app.logger.debug(response.read())
+	js=json.dumps({'success':'success'})
+
+	resp = Response(js, status=200, mimetype='application/json')
+	return resp	
+
 
 @app.route('/trending')
 def trending():
