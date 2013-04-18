@@ -111,3 +111,26 @@ def seed_content():
 			collection.save(review)
 		counter+=1
 		new_content.close()
+
+def seed_fake_users():
+	f=codecs.open('data/american_names.txt','r','utf-8')
+	client=MongoClient()
+	db=client.leanreviews
+	while True:
+		name=f.readline()
+		if not name:
+			break
+		name=name.strip()
+		user={}
+		user['name']=name
+		user['password']=''
+		user['active']=False
+		user['email']='fake@leanreviews.com'
+		user['reviews_created']=randint(0,7)
+		user['reviews_submitted']=randint(1,30)
+		user['kudos']=user['reviews_created']+user['reviews_submitted']
+		user['fb_id']=''
+		user['access_token']=''
+		user['type']='fake'
+		db.users.save(user)
+	f.close()

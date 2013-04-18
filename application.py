@@ -465,7 +465,41 @@ def category(category):
 	pagination.append(right_ellipses)
 	pagination.append(right)
 
-	return render_template('category.html',display_message=display[category],reviews=output_review,length=len(output_review),pagination=pagination,url=request.path,active=active)
+	return render_template('category.html',display_message=display[category],reviews=output_review,
+							length=len(output_review),pagination=pagination,url=request.path,active=active)
+
+def get_recent_submitters(length):
+	client=MongoClient()
+	db=client[app.config['DATABASE']]
+	cursor=db.users.find({'type':'fake'})
+	users=[]
+	for user in cursor:
+		users.append(user)
+	random.shuffle(users)
+	output=[]
+	for user in users[:length]:
+		output.append((user['_id'],user['name']))
+	return output
+
+
+
+def get_recommendations(category,present_review_id):
+	client=MongoClient()
+	db=client[app.config['DATABASE']]
+	category=db.categories.find({'name':category})
+	category=category.next()
+	review_ids=[]
+	for review_id in category['review_ids']:
+		review_ids.append(review_id)
+	random.shuffle(review_ids)
+	review_ids.remove(present_review_id)
+	output=[]
+	for review_id in review_ids[:5]:
+		review=db.reviews.find({'_id':review_id})
+		review=review.next()
+		output.append([review_id,review['name'],review['display_name']])
+	return output
+
 
 @app.route('/item')
 def item():
@@ -514,15 +548,26 @@ def item():
 	if len(total_reviews)==1:
 		data=[]
 		output_review={}
+		number_reviews=0
 		for word,value in review['words'].iteritems():
 			data.append({'text':word,'size':value})
+			number_reviews+=value
 		output_review['id']=review['_id']
 		output_review['name']=review['display_name']
 		output_review['data']=json.dumps(data)
 		output_review['upvote']=review['upvote']
 		output_review['downvote']=review['downvote']
 		output_review['description']=review['description']
-		return render_template('item.html',review=output_review)
+		recent_submitters=None
+		if 'recent_submitters' not in review:
+			recent_submitters=get_recent_submitters(3)
+		else:
+			length=len(review['recent_submitters'])
+			recent_submitters=get_recent_submitters(3-length)
+			recent_submitters.extend(review['recent_submitters'])
+		recommendations=get_recommendations(review['categories'],review['_id'])
+		return render_template('item.html',review=output_review,recommendations=recommendations,number_reviews=number_reviews,
+								votes=review['upvote']+review['downvote'],recent_submitters=recent_submitters)
 	else:
 		page=request.args.get('p')
 		
@@ -616,18 +661,25 @@ def share_facebook():
 		data[name]=value[0]
 	image=data['image']
 	image=base64.decodestring(image)
-	f=open('data/'+data['id']+'.png','w')
+	f=open('static/data/'+data['id']+'.png','w')
 	f.write(image)
 	f.close()
 	access_token=current_user.access_token
 	app.logger.debug(access_token)
-	values=([('message','check-----from application')
-			])
+	
+	values={'message':'check-----from application',
+			'access_token':access_token}
+			
 	app.logger.debug(current_user.fb_id)
-	url='https://graph.facebook.com/'+current_user.fb_id+'/feed'
+	url='https://graph.facebook.com/'+current_user.fb_id+'/feed?method=post'
+	app.logger.debug(url)
 	data = urllib.urlencode(values)
+	app.logger.debug(values)
+	app.logger.debug(data)
 	req = urllib2.Request(url, data)
+	app.logger.debug(req.headers)
 	response = urllib2.urlopen(req)
+	
 	app.logger.debug(response.read())
 	js=json.dumps({'success':'success'})
 

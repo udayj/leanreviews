@@ -14,10 +14,17 @@
 
       
     </div>
+    <div class="span3">
+    </div>
+    <div class="span3 well pull-right">
+      <b>Page Stats</b><br>
+      Review Count - {{number_reviews}} <br>
+      Vote Count - {{votes}}
+    </div>
   </div>
 <br>
       <!-- Example row of columns -->
-        <div class="container">
+        <div class="container" style="position:relative;top:-30px;">
         <div class="row">
           <div class="span12">
 
@@ -44,11 +51,12 @@
           Rate this: <span class="btn btn-success" onclick="send_rating('{{review['id']}}','up_vote')"> Up Vote</span> <span class="btn btn-warning" onclick="send_rating('{{review['id']}}','down_vote')"> Down Vote</span>
             </div>
             <br>
+            <br>
             <div class="span4" id="thanks_vote" style="display:none">
             </div>
           </div>
 
-          <hr>
+          
           <div class="row">
             <div class="span4">
               Your review - in 20 characters or less<br>
@@ -59,10 +67,65 @@
             <br>
             <div class="span4" id="thanks_review" style="display:none">
             </div>
-            <div class="span4" id="share_fb" onclick="create_png('{{review['id']}}')">
-              Share on Facebook
+            
+          </div>
+          <br>
+          <br>
+          <div class="row">
+            <div class="span4">
+              <table class="table table-bordered table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>
+                      Also Explore
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for recommendation in recommendations %}
+                  <tr>
+                    <th>
+                      <a href="/item?id={{recommendation[0]}}&name={{recommendation[1]}}">{{recommendation[2]}}</a>
+                    </th>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
           </div>
+
+          <div class="row">
+            <br>
+            <div class="span4" id="share_fb" onclick="create_png('{{review['id']}}')">
+              Share on Facebook
+              <br><br><br>
+            </div>
+          </div>
+           <div class="row">
+            <div class="span4">
+              <table class="table table-bordered table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>
+                      Recent Reviewers
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for submitter in recent_submitters %}
+                  <tr>
+                    <th>
+                      <a href="/profile?id={{submitter[0]}}">{{submitter[1]}}</a>
+                    </th>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+            
+            
+          
 
         </div>
       </div>
