@@ -37,7 +37,7 @@
           <div style="display:none" id="review{{review_counter}}words">
             {{review['data']}}
           </div>
-          <h2 style="color:#0072E6;text-align:center" title="{{review['title_name']}}">{{review['name']}}</h2>
+          <div style="color:#547;text-align:center;font-size:18px;font-weight:bold;margin-top:5px;" title="{{review['title_name']}}">{{review['name']}}</div>
           <h4 title="{{review['title_description']}}">{{review['description']}}</h4>
           
         </div>
@@ -48,7 +48,87 @@
       {% set counter=counter+1 %}
       {% set review_counter=review_counter+1 %}
     {% endfor %}
-        </div>       
+        </div>   
+      {% if length>3 %}
+        <hr style="margin-top:7px;margin-bottom:7px;">
+        <div class="row">
+  
+    {% set review_counter=4 %}
+    {% for review in reviews[3:6] %}
+      
+        
+      <a href="{{review['url']}}">
+        <div class="span4" id="review{{review_counter}}" style="background-color:#F2F2F2">
+          <div style="display:none" id="review{{review_counter}}words">
+            {{review['data']}}
+          </div>
+          <div style="color:#547;text-align:center;font-size:18px;font-weight:bold;margin-top:5px;" title="{{review['title_name']}}">{{review['name']}}</div>
+           {% if not review['description'] or review['description']=='' %}
+          <br>
+          {% endif %}
+          <h4 >{{review['description']}}</h4>
+          
+        </div>
+      </a>
+      
+
+      
+  
+      {% set review_counter=review_counter+1 %}
+    {% endfor %}
+        </div>     
+        {% endif %}  
+
+        <br>
+        <div class="row">
+          <div class="span4">
+            <span style="font-weight:bold;">Users with most kudos</span>
+            <br>
+          <table class="table table-bordered table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>
+                      Name
+                    </th>
+                    <th>
+                      Reviews Submitted
+                    </th>
+                    <th>
+                      Kudos Earned
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for user in users %}
+                  <tr>
+                    <th>
+                      <a href="/profile?id={{user['_id']}}">{{user['name']}}</a>
+                    </th>
+                    <th style="text-align:center">
+                      {{user['reviews_submitted']}}
+                    </th>
+                    <th style="text-align:center">
+                      {{user['kudos']}}
+                    </th>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="span7 pull-right">
+              <blockquote class="pull-right">
+               <p> Reviewing stuff hasn't been easier</p>
+                <small>
+                  <cite title="John">John</cite>
+                </small>
+              </blockquote>
+              <blockquote class="pull-right">
+                <p>Thanks for making it easier to write honest reviews</p>
+                <small>
+                  <cite title="Shelly">Shelly</cite>
+                </small>
+              </blockquote>
+          </div>
       </div>
 
 
@@ -67,11 +147,23 @@
           return;
         window.location='/item?name='+name.value.trim();
     }
- var fontSize = d3.scale.linear()
-                  .domain([0,160])
-                  .range([10, 80]);
+
     var fill = d3.scale.category20();
     function draw_word_cloud(id){
+
+      dataset=jQuery.parseJSON($(id+'words').html());
+    values=[]
+    for(var key in dataset)
+    {
+      
+
+      values.push(dataset[key]['size']);
+    }
+    var words_main=[];
+    var fontSize = d3.scale.linear()
+                   .domain([5, d3.max(values)])
+                  .range([10, 40]);
+
      d3.layout.cloud().size([300, 200])
       .words(jQuery.parseJSON($(id+'words').html()))
       /*.words([
@@ -109,7 +201,7 @@
   }
 }
 
-for(var i=0;i<3;i++)
+for(var i=0;i<6;i++)
 {
   draw_word_cloud("#review"+(i+1));
 }

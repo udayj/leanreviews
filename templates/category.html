@@ -34,7 +34,7 @@
           <div style="display:none" id="review{{review_counter}}words">
             {{review['data']}}
           </div>
-          <h2 style="color:black;text-align:center" title="{{review['title_name']}}">{{review['name']}}</h2>
+          <div style="color:#547;text-align:center;font-size:18px;font-weight:bold;margin-top:5px;" title="{{review['title_name']}}">{{review['name']}}</div>
           {% if not review['description'] or review['description']=='' %}
           <br>
           {% endif %}
@@ -51,7 +51,7 @@
     {% endfor %}
         </div>       
         {% if length>3 %}
-        <hr style="margin-top:3px;margin-bottom:3px;">
+        <hr style="margin-top:6px;margin-bottom:7px;">
         <div class="row">
   
     {% set review_counter=4 %}
@@ -63,7 +63,7 @@
           <div style="display:none" id="review{{review_counter}}words">
             {{review['data']}}
           </div>
-          <h2 style="color:black;text-align:center" title="{{review['title_name']}}">{{review['name']}}</h2>
+          <div style="color:#547;text-align:center;font-size:18px;font-weight:bold;margin-top:5px;" title="{{review['title_name']}}">{{review['name']}}</div>
            {% if not review['description'] or review['description']=='' %}
           <br>
           {% endif %}
@@ -80,7 +80,7 @@
         </div>     
         {% endif %}  
         {% if length>6 %}
-        <hr style="margin-top:3px;margin-bottom:3px;">
+        <hr style="margin-top:6px;margin-bottom:7px;">
         <div class="row">
   
     {% set review_counter=7 %}
@@ -92,7 +92,7 @@
           <div style="display:none" id="review{{review_counter}}words">
             {{review['data']}}
           </div>
-          <h2 style="color:black;text-align:center" title="{{review['title_name']}}">{{review['name']}}</h2>
+          <div style="color:#547;text-align:center;font-size:18px;font-weight:bold;margin-top:5px;" title="{{review['title_name']}}">{{review['name']}}</div>
            {% if not review['description'] or review['description']=='' %}
           <br>
           {% endif %}
@@ -173,11 +173,23 @@
           return;
         window.location='/item?name='+name.value.trim();
     }
-    var fontSize = d3.scale.linear()
-                  .domain([0,160])
-                  .range([10, 80]);
+
+    
     var fill = d3.scale.category20();
     function draw_word_cloud(id){
+      dataset=jQuery.parseJSON($(id+'words').html());
+    values=[]
+    for(var key in dataset)
+    {
+      
+
+      values.push(dataset[key]['size']);
+    }
+    var words_main=[];
+    var fontSize = d3.scale.linear()
+                   .domain([5, d3.max(values)])
+                  .range([10, 40]);
+
      d3.layout.cloud().size([300, 200])
       .words(jQuery.parseJSON($(id+'words').html()))
       /*.words([

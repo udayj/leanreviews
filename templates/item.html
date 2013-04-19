@@ -53,11 +53,12 @@
             <br>
             <br>
             <div class="span4" id="thanks_vote" style="display:none">
+
             </div>
           </div>
 
           
-          <div class="row">
+          <div class="row" style="margin-top:7px;">
             <div class="span4">
               Your review - in 20 characters or less<br>
               <input id="new_review" name="name" class="span4" type="text"  placeholder="Search for a review eg. Tom Cruise" >
@@ -96,11 +97,18 @@
 
           <div class="row">
             <br>
-            <div class="span4" id="share_fb" onclick="create_png('{{review['id']}}')">
+            <div class="span4">
+            <button type="button" class="btn btn-primary" id="share_fb" onclick="create_png('{{review['id']}}')">
               Share on Facebook
-              <br><br><br>
+              
+            </button>
+            
+
+          </div>
+          <div class="span4" id="thanks_facebook" style="display:none;">
             </div>
           </div>
+          <br><br><br>
            <div class="row">
             <div class="span4">
               <table class="table table-bordered table-striped table-hover">
@@ -137,11 +145,7 @@
 
       <hr>
 {% endblock %}
-      <div class="footer">
-        <p>&copy; LeanReviews.com 2013. All rights reserved.</p>
-      </div>
-
-    </div> <!-- /container -->
+    
 
 {% block javascript %}
     <script>
@@ -203,13 +207,15 @@ var words_main=[];
   }
 }
     var scale=d3.scale.linear()
-              .domain([0,160])
-              .range([0,400])
+              .domain([5,d3.max(values)])
+              .range([10,400])
     draw_word_cloud("#word_cloud","#review_words");
     var chart = d3.select("#word_cloud").append("div")
     .attr("class", "chart")
     .style('font-size','17px')
-    .text('Review Frequencies')
+    .style('font-weight','bold')
+    .style('margin-bottom','7px')
+    .text('Explore Review Frequencies')
     
     var data=jQuery.parseJSON($('#review_words').html())
     chart.selectAll("div")
@@ -217,28 +223,16 @@ var words_main=[];
     .enter().append("div")
     .attr('id',function(d) {return '123'+d['text'].replace(new RegExp(" ","g"),'-');})
     
-
+    var count=0
+    $('#123'+dataset[0]['text'].replace(new RegExp(" ","g"),'-')).attr('style','margin-top:30px');
     for(var value in dataset)
     {
-      /* d3.select('#123'+dataset[value]['text'])
-      .append("div")
-      .style("display","inline")
-      .style("width", function(d) { return parseInt(scale(d['size'])) + "px"; })
-      .attr('title',function(d){ return d['text'];})
-      .text(function(d) { return d['size']; })
-      .style("font-size","10px");*/
-       /*d3.select('#123'+dataset[value]['text'])
-      .append("div")
-      .style("display","inline")
-      .style("width", parseInt(scale(dataset[value]['size'])) + "px")
-      .attr('title',dataset[value]['text'])
-      .text(dataset[value]['size'])
-      .style("font-size","10px");*/
+      
 
       $('#123'+dataset[value]['text'].replace(new RegExp(" ","g"),'-')).append("<div class='span5' style='display:inline;font-size:10px;width:"+
         parseInt(scale(dataset[value]['size']))+"px' title='"+dataset[value]['text']+"'></div>");
 
-      $('#123'+dataset[value]['text'].replace(new RegExp(" ","g"),'-')).append("<span style='position:relative;top:-7px;font-size:13px'>"+dataset[value]['text']+"</span><br>");
+      $('#123'+dataset[value]['text'].replace(new RegExp(" ","g"),'-')).append("<span style='position:relative;top:-7px;font-size:13px;font-weight:normal'>"+dataset[value]['text']+"</span><br>");
       
       
     }
@@ -274,15 +268,18 @@ var words_main=[];
   success: function(data)
   {
     
-    if(!data.success)
+    if(data.success)
     {
+      var userid=$('#userid').html();
+    $('#thanks_facebook').css('display','');
+    $('#thanks_facebook').html('<br>Thanks for sharing<br>');  
       
-      window.location.href="/signup";
     }
     else{
+      
     var userid=$('#userid').html();
-    $('#thanks_vote').css('display','');
-    $('#thanks_vote').html('Thanks for sharing it with your friends.');
+    $('#thanks_facebook').css('display','');
+    $('#thanks_facebook').html('<br>Hey, you need to login using <a href="'+data['facebook_login']+'">Facebook</a> to be able to share.<br> ');
   }
 },
   fail: function()
@@ -315,12 +312,13 @@ var words_main=[];
     if(!data.success)
     {
       
-      window.location.href="/signup";
+      $('#thanks_vote').css('display','');
+    $('#thanks_vote').html('Thanks for your vote. You could earn a kudo by <a href="/login">logging in</a> <br><br>');
     }
     else{
     var userid=$('#userid').html();
     $('#thanks_vote').css('display','');
-    $('#thanks_vote').html('Thanks for your vote. You just earned a <a href="/profile?id='+userid+'">kudo</a>');
+    $('#thanks_vote').html('Thanks for your vote. You just earned a <a href="/profile?id='+userid+'">kudo</a><br><br>');
   }
 },
   fail: function()
@@ -359,13 +357,14 @@ function send_review(id)
   {
     if(!data.success)
     {
-      window.location.href="/signup"
+          $('#thanks_review').css('display','');
+    $('#thanks_review').html('Thanks for your review. You could earn a kudo by <a href="/login">logging in</a> <br><br>');      
 
     }
     else{
       var userid=$('#userid').html();
     $('#thanks_review').css('display','');
-    $('#thanks_review').html('Thanks for your review. You just earned a <a href="/profile?id='+userid+'">kudo</a>');
+    $('#thanks_review').html('Thanks for your review. You just earned a <a href="/profile?id='+userid+'">kudo</a><br><br>');
   }
   },
   fail: function()

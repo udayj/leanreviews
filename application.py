@@ -50,16 +50,40 @@ class User(UserMixin):
     def is_active(self):
         return self.active
 
+def get_leaderboard():
+	client=MongoClient()
+	db=client[app.config['DATABASE']]
+	cursor=db.users.find()
+	users=[]
+	def sort_function(user):
+		return -user['kudos']
+	for user in cursor:
+		users.append(user)
+	users.sort(key=sort_function)
+	return users[:5]
+
+def get_recent_reviews():
+	client=MongoClient()
+	db=client[app.config['DATABASE']]
+	cursor=db.recentreviews.find()
+	reviews=[]
+	for review in cursor:
+		reviews.append(review)
+	return reviews
+
 @app.route('/')
 def front():
 	app.logger.debug('check')
-	output_review=get_trending_data(3)
-	return render_template('front.html',reviews=output_review,active='front')
+	output_review=get_trending_data(6)
+	users=get_leaderboard()
+	#recent_reviews=get_recent_reviews()
+	return render_template('front.html',reviews=output_review,active='front',users=users,length=6,title='quick reviews for almost anything',
+							meta_description='Lean Reviews provides a quick and clean crowd opinion and review on almost anything.')
 
 @app.route('/about')
 def about():
 	
-	return render_template('about.html')
+	return render_template('about.html',title='About')
 
 @login_manager.user_loader
 def load_user(_id):
@@ -203,7 +227,8 @@ def login():
 
 
 	if request.method=='GET':
-		return render_template('/signup.html',google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,active='login')
+		return render_template('/signup.html',google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,active='login',
+								title='quick reviews for almost anything')
 	data={}
 	for name,value in dict(request.form).iteritems():
 		data[name]=value[0]
@@ -297,7 +322,8 @@ def signup():
 
 
 	if request.method=='GET':
-		return render_template('/signup.html',google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,active='signup')
+		return render_template('/signup.html',google_login=flow.step1_get_authorize_url(),facebook_login=facebook_login,active='signup',
+								title='quick reviews for almost anything')
 	else:
 		
 		data={}
@@ -436,7 +462,7 @@ def category(category):
 		for word,value in review['words'].iteritems():
 			data.append({'text':word,'size':value})
 		description=truncate_word(review['description'],30)
-		display_name=truncate_word(review['display_name'],24)
+		display_name=truncate_word(review['display_name'],30)
 		output_review.append({'name':display_name,'description':description,'data':json.dumps(data),
 							  'title_description':review['description'],'title_name':review['display_name'],
 							  'url':'/item?name='+review['name']+'&id='+str(review['_id'])})
@@ -464,9 +490,11 @@ def category(category):
 	pagination.append(next)
 	pagination.append(right_ellipses)
 	pagination.append(right)
+	meta_description='The most accurate reviews on '+category+'. Explore thousands of other reviews easily and even write some quick reviews.'
 
 	return render_template('category.html',display_message=display[category],reviews=output_review,
-							length=len(output_review),pagination=pagination,url=request.path,active=active)
+							length=len(output_review),pagination=pagination,url=request.path,active=active,title=display[category],
+							meta_description=meta_description)
 
 def get_recent_submitters(length):
 	client=MongoClient()
@@ -566,8 +594,10 @@ def item():
 			recent_submitters=get_recent_submitters(3-length)
 			recent_submitters.extend(review['recent_submitters'])
 		recommendations=get_recommendations(review['categories'],review['_id'])
+		meta_description='Get to know what the crowd thinks about '+ review['display_name']+' and write quick, honest reviews.'
 		return render_template('item.html',review=output_review,recommendations=recommendations,number_reviews=number_reviews,
-								votes=review['upvote']+review['downvote'],recent_submitters=recent_submitters)
+								votes=review['upvote']+review['downvote'],recent_submitters=recent_submitters,
+								title=review['display_name']+ ' Reviews', meta_description=meta_description)
 	else:
 		page=request.args.get('p')
 		
@@ -592,7 +622,7 @@ def item():
 			for word,value in review['words'].iteritems():
 				data.append({'text':word,'size':value})
 			description=truncate_word(review['description'],30)
-			display_name=truncate_word(review['display_name'],24)
+			display_name=truncate_word(review['display_name'],30)
 			output_review.append({'name':display_name,'data':json.dumps(data),'description':description,
 								  'title_name':review['display_name'],
 								  'url':'/item?name='+review['name']+'&id='+str(review['_id'])})
@@ -648,7 +678,7 @@ def get_trending_data(count):
 		for word,value in review['words'].iteritems():
 			data.append({'text':word,'size':value})
 		description=truncate_word(review['description'],30)
-		display_name=truncate_word(review['display_name'],24)
+		display_name=truncate_word(review['display_name'],30)
 		output_review.append({'name':display_name,'data':json.dumps(data),
 							  'description':description,'title_name':review['display_name'],
 							  'url':'/item?name='+review['name']+'&id='+str(review['_id'])})
@@ -661,39 +691,58 @@ def share_facebook():
 		data[name]=value[0]
 	image=data['image']
 	image=base64.decodestring(image)
+	facebook_login='https://graph.facebook.com/oauth/authorize?scope=email,publish_actions&client_id=423477151081458&redirect_uri='+app.config['HOST']+'/facebook_oauth_callback'
 	f=open('static/data/'+data['id']+'.png','w')
 	f.write(image)
 	f.close()
-	access_token=current_user.access_token
-	app.logger.debug(access_token)
+	access_token=None
+	client=MongoClient()
+	db=client[app.config['DATABASE']]
+	review=db.reviews.find({'_id':ObjectId(data['id'])})
+	review=review.next()
+	try:
+		access_token=current_user.access_token
+	except AttributeError:
+		js=json.dumps({'facebook_login':facebook_login})
+		resp = Response(js, status=200, mimetype='application/json')
+		return resp	
 	
-	values={'message':'check-----from application',
-			'access_token':access_token}
-			
-	app.logger.debug(current_user.fb_id)
+	values={'message':'A much better (and easier) way to read and write reviews',
+			'access_token':access_token,
+			'picture':'http://www.leanreviews.com/static/data/'+data['id']+'.png',
+			'link':'http://www.leanreviews.com/item?name='+review['name']+'&id='+str(review['_id']),
+			'name':review['display_name'],
+			'caption':'Read what the crowd thinks about '+review['display_name'],
+			'description':'The easiest way yet to read and write opinions about '+review['display_name']+' on the web'}
+
+	app.logger.debug(values)		
 	url='https://graph.facebook.com/'+current_user.fb_id+'/feed?method=post'
 	app.logger.debug(url)
 	data = urllib.urlencode(values)
-	app.logger.debug(values)
 	app.logger.debug(data)
 	req = urllib2.Request(url, data)
 	app.logger.debug(req.headers)
-	response = urllib2.urlopen(req)
-	
+	try:
+		response = urllib2.urlopen(req)
+	except:
+		app.logger.debug('User logged in but not using Facebook')
+		js=json.dumps({'facebook_login':facebook_login})
+		resp = Response(js, status=200, mimetype='application/json')
+		return resp	
+		
 	app.logger.debug(response.read())
 	js=json.dumps({'success':'success'})
-
 	resp = Response(js, status=200, mimetype='application/json')
-	return resp	
+	return resp
+	
 
 
 @app.route('/trending')
 def trending():
 	output_review=get_trending_data(9)
-	return render_template('trending.html',reviews=output_review,length=9,active='trending')
+	return render_template('trending.html',reviews=output_review,length=9,active='trending',title='Trending Reviews')
 
 @app.route('/rate_item',methods=['POST'])
-@login_required
 def rate_item():
 	
 	data={}
@@ -724,18 +773,22 @@ def rate_item():
 	else:
 		review['downvote']=review['downvote']+1
 		db.reviews.save(review)
-	user=db.users.find({'_id':ObjectId(current_user.id)})
-	user=user.next()
-	user['kudos']=user['kudos']+1
-	db.users.save(user)
+	js=None
+	try:
+		user=db.users.find({'_id':ObjectId(current_user.id)})
+		user=user.next()
+		user['kudos']=user['kudos']+1
+		db.users.save(user)
+		js=json.dumps({'success':'success'})
+	except AttributeError:
+		js=json.dumps({'partial_success':'success'})
 
-	js=json.dumps({'success':'success'})
+	
 
 	resp = Response(js, status=200, mimetype='application/json')
 	return resp
 
 @app.route('/review_item',methods=['POST'])
-@login_required
 def review_item():
 	
 	
@@ -757,12 +810,17 @@ def review_item():
 	else:
 		review['words'][data['review']]=1
 	db.reviews.save(review)
-	user=db.users.find({'_id':ObjectId(current_user.id)})
-	user=user.next()
-	user['kudos']=user['kudos']+1
-	user['reviews_submitted']=user['reviews_submitted']+1
-	db.users.save(user)
-	js=json.dumps({'success':'success'})
+	js=None
+	try:
+		user=db.users.find({'_id':ObjectId(current_user.id)})
+		user=user.next()
+		user['kudos']=user['kudos']+1
+		user['reviews_submitted']=user['reviews_submitted']+1
+		db.users.save(user)
+		js=json.dumps({'success':'success'})
+	except AttributeError:
+		js=json.dumps({'partial_success':'success'})
+	
 
 	resp = Response(js, status=200, mimetype='application/json')
 	return resp
@@ -805,7 +863,7 @@ def process_new_item():
 	
 	return redirect(url_for('item',id=str(_id),name=data['name'].lower().strip()))
 
-if app.debug is True or app.debug is None or app.debug is False:   
+if app.debug is None or app.debug is False:   
 	    import logging
 	    from logging.handlers import RotatingFileHandler
 	    file_handler = RotatingFileHandler('/home/uday/code/one_word_virtual/logs/application.log', maxBytes=1024 * 1024 * 100, backupCount=20)
