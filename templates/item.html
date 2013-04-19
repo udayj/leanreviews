@@ -23,16 +23,16 @@
     </div>
   </div>
 <br>
-      <!-- Example row of columns -->
+      
         <div class="container" style="position:relative;top:-30px;">
         <div class="row">
-          <div class="span12">
+          <div class="span9">
 
-      	   <h2 style="display:inline"> {{review['name']}} </h2> <br><br> <span class="btn btn-success" style="position:relative;top:-5px">{{review['upvote']}} Up votes</span>  <span class="btn btn-warning" style="position:relative;top:-5px">
+      	   <div style="display:inline;font-weight:bold;font-size:19px;"> {{review['name']}} </div> <br><br> <span class="btn btn-success" style="position:relative;top:-5px">{{review['upvote']}} Up votes</span>  <span class="btn btn-warning" style="position:relative;top:-5px">
            {{review['downvote']}} Down votes</span>
            <br>
-           <h4> {{review['description']}} - Still confused about what this refers to? Find out more on <a href="http://www.google.com/search?q={{review['name']}}">Google</a>.
-            <br>
+           <h4> </h4>
+            
             Can't find what you are looking for? Add a new review <a href="/add_new">here</a>
 
            </h4>
@@ -60,7 +60,7 @@
           
           <div class="row" style="margin-top:7px;">
             <div class="span4">
-              Your review - in 20 characters or less<br>
+              Your review - in 25 characters or less<br>
               <input id="new_review" name="name" class="span4" type="text"  placeholder="Search for a review eg. Tom Cruise" >
               <br>
               <button type="button" class="btn btn-primary" onclick="send_review('{{review['id']}}')">Submit</button>
@@ -180,7 +180,7 @@ var words_main=[];
       .words(jQuery.parseJSON($(review_words).html()))
       .font("Impact")
       .fontSize(function(d) { return parseInt(fontSize(d.size)); })
-      .rotate(function(d) { return ~~(Math.random() * 5) * 10 - 10; })
+      .rotate(function(d) { return ~~(Math.random() * 5) * 05 - 07; })
       .on("end", draw)
       .start();
 
@@ -203,7 +203,7 @@ var words_main=[];
           return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
         })
         .text(function(d) { return d.text; });
-    $('#word_reviews').append('<div class="fb-like" data-href="http://3x9t.localtunnel.com" data-send="false" data-width="450" data-show-faces="false"></div>');
+    $('#word_reviews').append('<div class="fb-like" data-href="http://www.leanreviews.com/item?name={{review["name"]}}" data-send="false" data-width="450" data-show-faces="false"></div>');
   }
 }
     var scale=d3.scale.linear()

@@ -328,7 +328,7 @@ def signup():
 		
 		data={}
 		for name,value in dict(request.form).iteritems():
-			data[name]=value[0].lower().strip()
+			data[name]=value[0]
 		username=None
 		if 'username' in data:
 			username=data['username']
@@ -352,6 +352,8 @@ def signup():
 					   'reviews_submitted':0,
 					   'reviews_created':0,
 					   'kudos':0,
+					   'access_token':'',
+					   'fb_id':'',
 					   'active':False})
 		#user=User(name=username,email=data['email'],password=data['password'],active=False,id=str(_id))
 		msg = Message('Welcome to Lean Reviews', sender = app.config['MAIL_SENDER'], recipients = [data['email']])

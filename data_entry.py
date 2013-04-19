@@ -84,6 +84,7 @@ def seed_categories():
 def seed_content():
 	files=['american_actors.txt','books_new.txt','movies_new.txt','places_new.txt']
 	types=['people','books','movies','places']
+	
 	client=MongoClient()
 	db=client.leanreviews
 	collection=db.reviews
@@ -96,6 +97,7 @@ def seed_content():
 				break
 			content=content.split('\t')
 			name=content[0]
+			
 			review={}
 			review['name']=normalize(name)
 			review['display_name']=name
@@ -134,3 +136,25 @@ def seed_fake_users():
 		user['type']='fake'
 		db.users.save(user)
 	f.close()
+
+def seed_javascript():
+	files=['american_actors.txt','books_new.txt','movies_new.txt','places_new.txt']
+	types=['people','books','movies','places']
+	javascript_file=codecs.open('data/javascript_file','w','utf-8')
+	counter=0
+	file_content=''
+	for genre in files:
+		new_content=codecs.open('data/'+genre,'r','utf-8')
+		while True:
+			content=new_content.readline()
+			if not content:
+				break
+			content=content.split('\t')
+			name=content[0]
+			file_content=file_content+'\n'+name
+			
+			
+		counter+=1
+		new_content.close()
+	javascript_file.write(file_content)
+	javascript_file.close()
