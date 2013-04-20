@@ -189,8 +189,9 @@ var words_main=[];
     d3.select(id).append("svg")
         .attr("width", 600)
         .attr("height", 450)
-      .append("g")
         .attr("id","word_reviews")
+        .append("g")
+        
         .attr("transform", "translate(280,215)")
       .selectAll("text")
         .data(words)
@@ -203,7 +204,7 @@ var words_main=[];
           return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
         })
         .text(function(d) { return d.text; });
-    $('#word_reviews').append('<div class="fb-like" data-href="http://www.leanreviews.com/item?name={{review["name"]}}" data-send="false" data-width="450" data-show-faces="false"></div>');
+    $('#word_cloud').append('<div class="fb-like" data-href="http://www.leanreviews.com/item?name={{review["name"]}}" data-send="false" data-width="450" data-show-faces="false"></div><br>');
   }
 }
     var scale=d3.scale.linear()
@@ -215,6 +216,7 @@ var words_main=[];
     .style('font-size','17px')
     .style('font-weight','bold')
     .style('margin-bottom','7px')
+    .style('margin-top','7px')
     .text('Explore Review Frequencies')
     
     var data=jQuery.parseJSON($('#review_words').html())

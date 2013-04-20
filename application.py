@@ -374,7 +374,6 @@ def signup():
 
 
 @app.route('/add_new')
-@login_required
 def add_new():
 	return render_template('add_new.html')
 
@@ -560,7 +559,8 @@ def item():
 				review=review.next()
 				
 			except StopIteration:
-				return render_template('error.html')
+				return render_template('add_new.html',message='We cant find what you are looking for. But you can add a new review real quick.',
+										name=name)
 	else:
 		name=request.args.get('name')
 		if not name:
@@ -571,7 +571,8 @@ def item():
 		try:
 			review=review.next()
 		except StopIteration:
-			return render_template('error.html')
+			return render_template('add_new.html',message='We cant find what you are looking for. But you can add a new review real quick.',
+										name=name)
 	total_reviews=[review]
 	for review in cursor:
 		total_reviews.append(review)
@@ -828,7 +829,6 @@ def review_item():
 	return resp
 
 @app.route('/process_new_item',methods=['POST'])
-@login_required
 def process_new_item():
 	data={}
 	for name,value in dict(request.form).iteritems():
@@ -855,12 +855,14 @@ def process_new_item():
 		except StopIteration:
 			category={'name':data['category'],'review_ids':[_id]}
 			db.categories.save(category)
-
-	user=db.users.find({'_id':ObjectId(current_user.id)})
-	user=user.next()
-	user['kudos']=user['kudos']+1
-	user['reviews_created']=user['reviews_created']+1
-	db.users.save(user)
+	try:
+		user=db.users.find({'_id':ObjectId(current_user.id)})
+		user=user.next()
+		user['kudos']=user['kudos']+1
+		user['reviews_created']=user['reviews_created']+1
+		db.users.save(user)
+	except:
+		pass
 
 	
 	return redirect(url_for('item',id=str(_id),name=data['name'].lower().strip()))

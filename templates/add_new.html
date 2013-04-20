@@ -16,6 +16,9 @@
   <br>
       <div class="row">
         <div class="span9">
+          <div style="font-size:17px;">
+            {{message}}<hr>
+          </div>
           <form id="form" class="form-horizontal well" action="/process_new_item" method="post">
             <fieldset>
               <legend>Add new item to be reviewed</legend>
@@ -23,7 +26,7 @@
                 
                   <label class="control-label" for="name">Add review for </label>
                   <div class="controls">
-                  <input type="text" id="name" class="input-xlarge" name="name">
+                  <input type="text" id="name" class="input-xlarge" name="name" value="{{name}}">
                   <p class="help-block">People can use this name to search for this review eg. <b>The Social Network</b></p>
                 </div>
               </div>
@@ -85,9 +88,9 @@
       var category=$('#category').val()
       var review=$('#review').val()
       
-      if(!checkMaxLength(name,40))
+      if(!checkMaxLength(name,60))
       {
-        alert('Name cannot be more than 40 characters');
+        alert('Name cannot be more than 60 characters');
         return false;
       }
       if(name==null || review==null || name.trim()=="" || review.trim()=="")

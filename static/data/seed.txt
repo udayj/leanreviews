@@ -1,0 +1,8 @@
+nice,good,fabulous,great,intriguing,awesome,thoughtful,interesting,good-read,must-read,romantic,comical,hilarious,awesome-story,thrilling,suspense,worth-the-money,intellectual,classic,nice-book,climactic
+boring,slow,,difficult-read,difficult-to-understand,easy-read,cheap,overhyped,expensive,waste,crap,relevant,political
+thrilling,excellent,interesting,romantic,good,nice,must-watch,awesome,5-star,hilarous,comedy,fun,nice-acting,fantastic-story,great-direction,wonderful,superb,great-actors,suspense,awesome-action,great,cinematography
+boring,waste,waste-of-time,insane,grotesque,madness,pathetic-music,just-about-ok,cheap,atrocious,crap
+nice-place,awesome,serene,hectic,cosmopolitan,peaceful,very-dry,helpful-people,good-hotels,language-not-a-problem,awesome-scenary,great-view,great-cars,cold,must-visit,great-climate
+hot,humid,helpful-people,cheap,very-rich,nice-food,avoid,waste-of-time,soothing,overhyped,expensive,busy,tiring
+awesome,nice,charismatic,cool,charming,business-like,intellectual,funny,jokes,intelligent,good-looking,thoughtful,academic,great,underrated,athletic,energetic,gorgeous
+manipulative,strong,active,impulsive,calculative,dull,overhyped,fan-following,grey,mean,bad,cheap,boring
