@@ -1,0 +1,47 @@
+The problem we are trying to solve is in essence a network effects problem. Users get the most benefit from the website when there is lots of content. There will be lots of content if lots of users use the application and contribute content in the form of reviews.
+
+Content
+The idea is to get enough seed content to encourage people to explore the application. We need content around people since that can be a good way to get user's attention initially. For instance we could advertise for "Tom Cruise Reviews". Google Ad Words does not disallow bidding on proper nouns, so we could use that to our advantage. Of course, we dont know what kind/quality of traffic this can provide. So it needs to be validated. Most value is delivered through content around books, movies, gadgets, etc. However, people centric content helps with marketing.
+
+Following is a tentative order in which content could be collected.
+1. US
+We have already covered some actors, musicians, gadgets, places
+	a. Baseball Players
+	b. Baseball teams
+	c. Basketball Players
+	d. Basketball teams
+	e. American Cities
+
+2. UK
+	a. Football Players - EPL
+	b. Football teams - EPL
+	c. Football Players - Spanish
+	d. Football Teams - Spanish
+	e. Cities
+
+3. India
+	a. Actors
+	b. Sports
+	c. Cities
+	d. Movies
+
+Mobile
+This application is very suited for a mobile version. Since reviewing stuff is easy, providing a mobile version of the application could be good for boosting no. of users. The concern is of course that this requires effort and a lot of expense. So maybe we could tackle this after we have some traction.
+
+Social
+We have very minimal social integration presently in the form of a like button and share button. A facebook app would be a nice way to integrate into the Facebook platform strongly. I am not very sure of how good the advertising platform on Facebook is.
+Other interesting channels:-
+Pinterest
+Twitter
+
+Major Question
+How could we go for organic growth? Where do we promote the application? HN-Reddit/r/startups is a good way to get feedback but not the best platform to promote a general web application.
+Should we advertise or stick to organic growth ?
+Do we have enough content to justify advertising ?
+How should we go about promoting the application?
+Any other online platform where we could promote the application ?
+Can we ask someone for mentoring?
+
+
+
+

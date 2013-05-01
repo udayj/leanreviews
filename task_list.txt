@@ -1,0 +1,14 @@
+v3 task list
+	spell checker
+	pinterest integration
+	ajax requests for autocomplete option
+	description, picture for entities
+	formatted emails
+	twitter integration
+	sentiment analysis
+	dynamic sitemap
+	password reset option
+	more content
+	better recommendations based on machine learning
+	facebook page
+	blog section
