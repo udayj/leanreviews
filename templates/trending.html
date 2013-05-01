@@ -137,6 +137,19 @@
                   .range([10, 80]);
     var fill = d3.scale.category20();
     function draw_word_cloud(id){
+
+       dataset=jQuery.parseJSON($(id+'words').html());
+    values=[]
+    for(var key in dataset)
+    {
+      
+
+      values.push(dataset[key]['size']);
+    }
+    var words_main=[];
+    var fontSize = d3.scale.linear()
+                   .domain([0, d3.max(values)])
+                  .range([10, 18]);
      d3.layout.cloud().size([300, 200])
       .words(jQuery.parseJSON($(id+'words').html()))
       /*.words([
