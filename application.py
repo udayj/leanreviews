@@ -1,3 +1,4 @@
+ # -*- coding: utf-8 -*-
 from flask import Flask, request, render_template, Response, redirect, url_for,flash 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -16,6 +17,8 @@ import ast
 import base64
 import codecs
 import urllib2
+import nltk
+import datetime
 
 
 SECRET_KEY='SECRET'
@@ -50,6 +53,37 @@ class User(UserMixin):
     def is_active(self):
         return self.active
 
+@app.route('/review_analytics',methods=['GET','POST'])
+def get_review_content():
+	if request.method=='GET':
+		return render_template('review_analytics.html')
+	else:
+		data={}
+		for name,value in dict(request.form).iteritems():
+			data[name]=value[0].lower().strip()
+		client=MongoClient()
+		db=client[app.config['DATABASE']]
+		review=None
+		words=data['words']
+		app.logger.debug(words)
+		words=words.replace('“',' ')
+		words=words.encode('utf-8')
+		tokens=nltk.word_tokenize(words)
+		text=nltk.Text(tokens)
+		feq=nltk.FreqDist(text)
+		app.logger.debug(feq.keys())
+		app.logger.debug(type(text))
+		output=[]
+		for key in feq.keys():
+			output.append({'text':key,'size':70-feq[key]})
+
+
+		js=json.dumps({'success':'success','words':output})
+		resp = Response(js, status=200, mimetype='application/json')
+		return resp
+
+
+
 def get_leaderboard():
 	client=MongoClient()
 	db=client[app.config['DATABASE']]
@@ -73,7 +107,7 @@ def get_recent_reviews():
 
 @app.route('/')
 def front():
-	app.logger.debug('check')
+	
 	output_review=get_trending_data(6)
 	users=get_leaderboard()
 	#recent_reviews=get_recent_reviews()
@@ -92,8 +126,17 @@ def load_user(_id):
 	user=db.users.find({'_id':ObjectId(_id)})
 	try:
 		user=user.next()
+		access_token=''
+		fb_id=''
+		try:
+			access_token=user['access_token']
+			fb_id=user['fb_id']
+			kudos=user['kudos']
+		except Exception:
+			access_token=''
+			fb_id=''
 		ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']),
-					access_token=user['access_token'],fb_id=user['fb_id'])
+					access_token=access_token,fb_id=fb_id)
 		return ret_user
 	except StopIteration:
 		return None
@@ -140,7 +183,7 @@ def google_oauth_callback():
 							   'reviews_created':0,
 							   'kudos':0,
 							   'active':True})
-			ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(_id))
+			ret_user=User(name=content['name'],email=content['email'],password="",active=True,_id=str(_id),access_token='',fb_id='')
 			if login_user(ret_user):
 				flash('Logged in!')
 				return redirect(url_for('front'))
@@ -245,7 +288,7 @@ def login():
 	user=db.users.find({'name':username,'password':password})
 	try:
 		user=user.next()
-		ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']))
+		ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']),access_token='',fb_id='')
 		if login_user(ret_user):
 			flash('Logged in!')
 			return redirect(url_for('front'))
@@ -256,7 +299,7 @@ def login():
 		user=db.users.find({'email':username,'password':password})
 		try:
 			user=user.next()
-			ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']))
+			ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']),access_token='',fb_id='')
 			if login_user(ret_user):
 				flash('Logged in!')
 				return redirect(url_for('front'))
@@ -287,9 +330,14 @@ def profile():
 		user=user.next()
 	except StopIteration:
 		return render_template('error.html')
-	kudos=user['kudos']
-	reviews_submitted=user['reviews_submitted']
-	reviews_created=user['reviews_created']
+	try:
+		kudos=user['kudos']
+		reviews_submitted=user['reviews_submitted']
+		reviews_created=user['reviews_created']
+	except Exception:
+		kudos=0
+		reviews_submitted=0
+		reviews_created=0
 	return render_template('profile.html',user=user)
 
 @app.route('/activate')
@@ -304,7 +352,7 @@ def activate():
 		user=user.next()
 		user['active']=True
 		db.users.save(user)
-		ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']))
+		ret_user=User(name=user['name'],email=user['email'],password="",active=user['active'],_id=str(user['_id']),access_token='',fb_id='')
 		login_user(ret_user)
 		return render_template('activate.html',message='Welcome to Lean Reviews. Your account has been activated')
 	except StopIteration:
@@ -394,7 +442,7 @@ def edit_review():
 	else:
 		data={}
 		for name,value in dict(request.form).iteritems():
-			data[name]=value[0].lower().strip()
+			data[name]=value[0].strip()
 		client=MongoClient()
 		db=client[app.config['DATABASE']]
 		review=None
@@ -406,7 +454,19 @@ def edit_review():
 			resp = Response(js, status=500, mimetype='application/json')
 			return resp
 
-		
+		review['categories']=data['category']
+		review['display_name']=data['display_name']
+		for category in review['categories'].split(','):
+			db_category=db.categories.find({'name':category})
+			try:
+				db_category=db_category.next()
+				if review['_id'] not in db_category['review_ids']:
+					db_category['review_ids'].append(review['_id'])
+					db.categories.save(db_category)
+			except StopIteration:
+				db_category={'name':category.lower().strip(),'review_ids':[review['_id']]}
+				db.categories.save(db_category)
+		review['description']=data['description']
 		review['words']=ast.literal_eval(data['review'])
 		db.reviews.save(review)
 		return render_template('edit_review.html',review=review,words=str(review['words']),message="Successfully updated database")
@@ -427,6 +487,19 @@ def truncate_word(word,length):
 	if len(word)>length:
 		return word[:length-3]+'...'
 	return word
+
+@app.route('/categories')
+def categories():
+	client=MongoClient()
+	db=client[app.config['DATABASE']]
+	categories=db.categories.find()
+	output=[]
+	for category in categories:
+		output.append(category['name'].title())
+	output.sort()
+	return render_template('categories.html',categories=output,title='Browse different reviews, share your reviews',active='categories')
+
+
 @app.route('/browse/<category>')
 def category(category):
 	page=request.args.get('p')
@@ -440,6 +513,7 @@ def category(category):
 	client=MongoClient()
 	db=client[app.config['DATABASE']]
 	collection=db.categories
+	category=category.lower().strip()
 	present_category=collection.find({'name':category})
 	try:
 		present_category=present_category.next()
@@ -493,8 +567,8 @@ def category(category):
 	pagination.append(right)
 	meta_description='The most accurate reviews on '+category+'. Explore thousands of other reviews easily and even write some quick reviews.'
 
-	return render_template('category.html',display_message=display[category],reviews=output_review,
-							length=len(output_review),pagination=pagination,url=request.path,active=active,title=display[category],
+	return render_template('category.html',display_message=category.title(),reviews=output_review,
+							length=len(output_review),pagination=pagination,url=request.path,active=active,title=category.title(),
 							meta_description=meta_description)
 
 def get_recent_submitters(length):
@@ -512,14 +586,16 @@ def get_recent_submitters(length):
 
 
 
-def get_recommendations(category,present_review_id):
+def get_recommendations(categories,present_review_id):
 	client=MongoClient()
 	db=client[app.config['DATABASE']]
-	category=db.categories.find({'name':category})
-	category=category.next()
 	review_ids=[]
-	for review_id in category['review_ids']:
-		review_ids.append(review_id)
+	for category in categories.split(','):
+		new_category=db.categories.find({'name':category})
+		new_category=new_category.next()
+		
+		for review_id in new_category['review_ids']:
+			review_ids.append(review_id)
 	random.shuffle(review_ids)
 	review_ids.remove(present_review_id)
 	output=[]
@@ -583,6 +659,7 @@ def item():
 		for word,value in review['words'].iteritems():
 			data.append({'text':word,'size':value})
 			number_reviews+=value
+
 		output_review['id']=review['_id']
 		output_review['name']=review['display_name']
 		output_review['data']=json.dumps(data)
@@ -828,6 +905,8 @@ def review_item():
 	resp = Response(js, status=200, mimetype='application/json')
 	return resp
 
+
+
 @app.route('/process_new_item',methods=['POST'])
 def process_new_item():
 	data={}
@@ -842,19 +921,24 @@ def process_new_item():
 					 'display_name':data['name'],
 					 'description':data['description'] if 'description' in data else '',
 					 'categories':data['category'] if 'category' in data else None,
-					 'words':{data['review']:40},
+					 'words':{data['review']:1},
 					 'upvote':0,
-					 'downvote':0})
+					 'downvote':0,
+					 'creation_time':datetime.datetime.utcnow()})
 	
+
 	if 'category' in data and data['category'] != '':
-		category=db.categories.find({'name':data['category']})
-		try:
-			category=category.next()
-			category['review_ids'].append(_id)
-			db.categories.save(category)
-		except StopIteration:
-			category={'name':data['category'],'review_ids':[_id]}
-			db.categories.save(category)
+
+		categories=data['category']
+		for new_category in categories.split(','):
+			category=db.categories.find({'name':new_category})
+			try:
+				category=category.next()
+				category['review_ids'].append(_id)
+				db.categories.save(category)
+			except StopIteration:
+				category={'name':new_category,'review_ids':[_id]}
+				db.categories.save(category)
 	try:
 		user=db.users.find({'_id':ObjectId(current_user.id)})
 		user=user.next()

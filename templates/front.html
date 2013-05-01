@@ -167,8 +167,8 @@
     }
     var words_main=[];
     var fontSize = d3.scale.linear()
-                   .domain([5, d3.max(values)])
-                  .range([10, 40]);
+                   .domain([0, d3.max(values)])
+                  .range([10, 20]);
 
      d3.layout.cloud().size([300, 200])
       .words(jQuery.parseJSON($(id+'words').html()))
@@ -217,7 +217,3 @@ for(var i=0;i<6;i++)
 {% endblock %}
 
 
-<!--
-3 model plate - 4 Pc.
-3 Model box   - 4 Pc.
-6A Switch - 4 Pc.-->

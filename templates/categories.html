@@ -6,7 +6,7 @@
         
         <div class="span6" style="position:relative;top:15px;">
           
-          <input id="search" name="name" class="span5" type="text" onkeydown="if (event.keyCode==13) { search();}"
+          <input id="search" name="name" class="span5" type="text"  onkeydown="if (event.keyCode==13) { search();}"
            placeholder="Search for a review eg. Tom Cruise" >
           <button type="button" class="btn btn-primary" onclick="search()" style="position:relative;top:-5px;"> Search</button>
 
@@ -14,15 +14,29 @@
       
     </div>
   </div>
-  <br>
-
-      <!-- Example row of columns  121 rs. 57 200 Mtr.-->
+<br>
+      <!-- Example row of columns -->
         <div class="container">
         <div class="row">
-          <div class="span10">
-
-      	   <h4> {{message}}</h4>
-           
+          <div class="span5"> 
+      	   <table class="table table-bordered table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>
+                      Browse All Categories
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for category in categories %}
+                  <tr>
+                    <th>
+                      <a href="/browse/{{category}}">{{category}}</a>
+                    </th>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
       </div>
     
       </div>
@@ -32,9 +46,12 @@
 
       <hr>
 {% endblock %}
+
 {% block javascript %}
     <script>
-     $(document).ready(function() {
+
+
+    $(document).ready(function() {
     $("input#search").autocomplete({
     source: items
 });});
@@ -79,5 +96,3 @@ draw_word_cloud("#word_cloud","#review_words");
 
      </script>
 {% endblock %}
-
-

@@ -20,54 +20,26 @@
       <div class="row">
         <div class="span12">
           <form id="form" class="form-horizontal well" method="post">
-            <input type="text" name="id" id="id" style="display:none" value="{{review['_id']}}">
-            <fieldset>
-              <legend>Edit Review</legend>
-              <div class="control-group">
-                  
-                  <label class="control-label" for="name">Name</label>
-                  <div class="controls">
-                  <input type="text" id="name" class="input-xlarge" name="name" value="{{review['name']}}">
-                
-                </div>
-              </div>
-              <div class="control-group">
-                  
-                  <label class="control-label" for="name">Display Name</label>
-                  <div class="controls">
-                  <input type="text" id="display_name" class="input-xlarge" name="display_name" value="{{review['display_name']}}">
-                
-                </div>
-              </div>
-              <div class="control-group">
-                
-                  <label class="control-label" for="description" >Description</label>
-                  <div class="controls">
-                  <input type="text" id="description" name="description" value="{{review['description']}}">
-                  
-                </div>
-              </div>
-              <div class="control-group">
-                
-                  <label class="control-label" for="category">Category </label>
-                  <div class="controls">
-                  <input type="text" id="category" name="category" value="{{review['categories']}}">
-                  
-                </div>
-              </div>
+                        <fieldset>
+              <legend>Analytics</legend>
+              
               <div class="control-group">
                 
                   <label class="control-label" for="review">Review</label>
                   <div class="controls">
-                  <textarea type="text" id="review" name="review" style="width:700px;height:400px;"> {{words}}</textarea>
+                  <textarea type="text" id="words" name="words" style="width:700px;height:400px;"></textarea>
                   
                 </div>
               </div>
               <div class="form-actions">
-                <input type="submit" class="btn btn-primary"></input>
+                <input type="button" class="btn btn-primary" value="Submit" onclick="send_words()"></input>
               </div>
             </fieldset>
           </form>
+        </div>
+      </div>
+      <div class="row">
+        <div class="span12" id="word_analytics">
         </div>
       </div>
 
@@ -86,17 +58,50 @@
         return true;
       }
     }
+    function send_words()
+    {
+      var words=$('#words').val();
+      $.ajax({
+  type: "POST",
+  url: "review_analytics",
+  data: {words:words},
+  
+  success: function(data)
+  {
+    
+    if(!data.success)
+    {
+      
+      
+    }
+    else{
+      var content=data['words'];
+      draw_word_cloud(content);
+  }
+},
+  fail: function()
+  {
+    $('#thanks_vote').css('display','');
+    $('#thanks_vote').html('Can\'t submit vote. Try back later!');
+    
+  }
+}).done(function( msg ) {
+ // document.getElementById("user_tips").value="";
+  //alert("Thanks for helping us improve!");
+});
+    }
+
+
     $(document).ready(function() {
     $("input#search").autocomplete({
     source: items});
+    
 
     $('#form').submit(function(){
 
-      var name=$('#name').val()
-      var description=$('#description').val()
-      var category=$('#category').val()
-      var review=$('#review').val()
       
+      
+      send_words(words);
      /* if(!checkMaxLength(name,40))
       {
         alert('Name cannot be more than 40 characters');
@@ -132,32 +137,31 @@
           return;
         window.location='/item?name='+name.value.trim();
     }
-    var fontSize = d3.scale.log().range([10, 100]);
+    var fontSize = d3.scale.linear()
+                  .domain([0,90])
+                  .range([10, 45]);
     var fill = d3.scale.category20();
-    function draw_word_cloud(id){
-     d3.layout.cloud().size([300, 300])
-      .words([
-        "Hello", "world", "normally", "you", "want", "more", "words",
-        "than", "this","good","bad","interesting","great","awesome","boring"].map(function(d) {
-        return {text: d, size: 10 + Math.random() * 90};
-      }))
-      .font("Impact")
+    function draw_word_cloud(words){
+      $('#word_analytics').html("");
+     d3.layout.cloud().size([900, 700])
+      .words(words)
+      .font("sans-serif")
       .fontSize(function(d) { return d.size; })
-      .rotate(function(d) { return ~~(Math.random() * 5) * 30 - 60; })
+      .rotate(function(d) { return ~~(Math.random() * 5) * 07 - 05; })
       .on("end", draw)
       .start();
 
   function draw(words) {
-    d3.select(id).append("svg")
-        .attr("width", 300)
-        .attr("height", 300)
+    d3.select("#word_analytics").append("svg")
+        .attr("width", 900)
+        .attr("height", 700)
       .append("g")
-        .attr("transform", "translate(150,150)")
+        .attr("transform", "translate(450,350)")
       .selectAll("text")
         .data(words)
       .enter().append("text")
         .style("font-size", function(d) { return d.size + "px"; })
-        .style("font-family", "Impact")
+        .style("font-family", "sans-serif")
         .style("fill", function(d, i) { return fill(i); })
         .attr("text-anchor", "middle")
         .attr("transform", function(d) {
@@ -167,7 +171,9 @@
   }
 }
 
+
      </script>
+
 {% endblock %}
 
 

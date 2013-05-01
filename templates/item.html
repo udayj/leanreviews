@@ -61,7 +61,7 @@
           <div class="row" style="margin-top:7px;">
             <div class="span4">
               Your review - in 25 characters or less<br>
-              <input id="new_review" name="name" class="span4" type="text"  placeholder="Search for a review eg. Tom Cruise" >
+              <input id="new_review" name="name" class="span4" type="text"  placeholder="eg. awesome" >
               <br>
               <button type="button" class="btn btn-primary" onclick="send_review('{{review['id']}}')">Submit</button>
             </div>
@@ -162,22 +162,24 @@
     }
 
     var fill = d3.scale.category20();
-    dataset=jQuery.parseJSON($(review_words).html());
+    dataset=jQuery.parseJSON($(review_words).text());
     values=[]
+    
     for(var key in dataset)
     {
       
-
+      
       values.push(dataset[key]['size']);
     }
+    
 var words_main=[];
     
     function draw_word_cloud(id,review_words){
       var fontSize = d3.scale.linear()
-                   .domain([5, d3.max(values)])
-                  .range([10, 70]);
+                   .domain([0, d3.max(values)])
+                  .range([13, 45]);
      d3.layout.cloud().size([600,450])
-      .words(jQuery.parseJSON($(review_words).html()))
+      .words(jQuery.parseJSON($(review_words).text()))
       .font("Impact")
       .fontSize(function(d) { return parseInt(fontSize(d.size)); })
       .rotate(function(d) { return ~~(Math.random() * 5) * 05 - 07; })
@@ -208,36 +210,89 @@ var words_main=[];
   }
 }
     var scale=d3.scale.linear()
-              .domain([5,d3.max(values)])
+              .domain([0,d3.max(values)])
               .range([10,400])
     draw_word_cloud("#word_cloud","#review_words");
     var chart = d3.select("#word_cloud").append("div")
     .attr("class", "chart")
     .style('font-size','17px')
     .style('font-weight','bold')
-    .style('margin-bottom','7px')
+    .style('margin-bottom','17x')
     .style('margin-top','7px')
+    .style('padding-top','7px')
     .text('Explore Review Frequencies')
     
-    var data=jQuery.parseJSON($('#review_words').html())
+    var title_function=null;
+    var title_function_hash=null;
+
+    function get_title_function()
+    {
+      var counter=0;
+      var hash=[];
+      
+      function get_title(content)
+      {
+        key=content['text']
+        
+        hash[key]=counter;
+        counter+=1;
+        return "123"+hash[key];
+      }
+
+      function get_hash(key)
+      {
+        //alert(key+" "+hash[key]);
+        
+        
+        return "123"+hash[key];
+      }
+      title_function=get_title;
+      title_function_hash=get_hash;
+
+    }
+    get_title_function();
+    
+    var data=jQuery.parseJSON($('#review_words').text())
     chart.selectAll("div")
     .data(dataset)
     .enter().append("div")
-    .attr('id',function(d) {return '123'+d['text'].replace(new RegExp(" ","g"),'-');})
+    .attr('id',title_function)
+
     
     var count=0
-    $('#123'+dataset[0]['text'].replace(new RegExp(" ","g"),'-')).attr('style','margin-top:30px');
+    $('#'+title_function_hash(dataset[0]['text'])).attr('style','margin-top:30px');
+    for(var value in dataset)
+    {
+      
+      
+      $('#'+title_function_hash(dataset[value]['text'])).append("<div class='span5' style='display:inline;font-size:10px;width:"+
+        parseInt(scale(dataset[value]['size']))+"px' title='"+dataset[value]['size']+"'></div>");
+
+      $('#'+title_function_hash(dataset[value]['text'])).append("<span style='position:relative;top:-7px;font-size:13px;font-weight:normal'>"+$('<div/>').text(dataset[value]['text']).html()+"</span><br>");
+      
+      
+    }
+
+
+    /*var data=jQuery.parseJSON($('#review_words').text())
+    chart.selectAll("div")
+    .data(dataset)
+    .enter().append("div")
+    .attr('id',function(d) {return '123'+d['text'].replace(new RegExp("\\s|\u0022|<|>|/","g"),'_');})
+    
+    var count=0
+    $('#123'+dataset[0]['text'].replace(new RegExp("\\s|\u0022|<|>|/","g"),'_')).attr('style','margin-top:30px');
     for(var value in dataset)
     {
       
 
-      $('#123'+dataset[value]['text'].replace(new RegExp(" ","g"),'-')).append("<div class='span5' style='display:inline;font-size:10px;width:"+
-        parseInt(scale(dataset[value]['size']))+"px' title='"+dataset[value]['text']+"'></div>");
+      $('#123'+dataset[value]['text'].replace(new RegExp("\\s|\u0022|<|>|/","g"),'_')).append("<div class='span5' style='display:inline;font-size:10px;width:"+
+        parseInt(scale(dataset[value]['size']))+"px' title='"+dataset[value]['size']+"'></div>");
 
-      $('#123'+dataset[value]['text'].replace(new RegExp(" ","g"),'-')).append("<span style='position:relative;top:-7px;font-size:13px;font-weight:normal'>"+dataset[value]['text']+"</span><br>");
+      $('#123'+dataset[value]['text'].replace(new RegExp("\\s|\u0022|<|>|/","g"),'_')).append("<span style='position:relative;top:-7px;font-size:13px;font-weight:normal'>"+$('<div/>').text(dataset[value]['text']).html()+"</span><br>");
       
       
-    }
+    }*/
     function create_png(id)
     {
     var canvas = document.createElement("canvas"),
@@ -301,8 +356,15 @@ var words_main=[];
 
      </script>
      <script>
+     var sent_rating=false;
+     var sent_review=false;
      function send_rating(id,vote)
      {
+      if(sent_rating==true)
+      {
+        return;
+      }
+      sent_rating=true;
       $.ajax({
   type: "POST",
   url: "/rate_item",
@@ -339,6 +401,11 @@ var words_main=[];
 <script>
 function send_review(id)
      {
+      if(sent_review==true)
+      {
+        return;
+      }
+      sent_review=true;
       var review=$('#new_review').val();
       if(review==null || review.trim()=="" || review.length==0)
       {

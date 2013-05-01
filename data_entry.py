@@ -158,3 +158,46 @@ def seed_javascript():
 		new_content.close()
 	javascript_file.write(file_content)
 	javascript_file.close()
+
+
+def seed_incremental_content():
+	files=['content_01052013.txt']
+	
+	client=MongoClient()
+	db=client.leanreviews
+	collection=db.reviews
+
+	counter=0
+
+	for genre in files:
+		new_content=codecs.open('data/'+genre,'r','utf-8')
+		while True:
+			content=new_content.readline()
+			if not content:
+				break
+			content=content.split('\t')
+			name=content[0]
+			category=normalize(content[1])
+			review={}
+			review['name']=normalize(name)
+			review['display_name']=name
+			review['description']=''
+			review['upvote']=randint(10,150)
+			review['downvote']=randint(10,35)
+			review['categories']=category
+			review['created_by']='admin'
+			review['creation_time']=datetime.datetime.utcnow()
+			review['words']={}
+			for word in content[2:]:
+				review['words'][word.strip().replace('.','')]=randint(10,100)
+			_id=collection.save(review)
+			new_category=db.categories.find({'name':category})
+			try:
+				new_category=new_category.next()
+				new_category['review_ids'].append(_id)
+				db.categories.save(new_category)
+			except StopIteration:
+				new_category={'name':category,'review_ids':[_id]}
+				db.categories.save(new_category)
+		counter+=1
+		new_content.close()

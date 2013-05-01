@@ -193,8 +193,8 @@
     }
     var words_main=[];
     var fontSize = d3.scale.linear()
-                   .domain([5, d3.max(values)])
-                  .range([10, 30]);
+                   .domain([0, d3.max(values)])
+                  .range([10, 18]);
 
      d3.layout.cloud().size([300, 200])
       .words(jQuery.parseJSON($(id+'words').html()))
