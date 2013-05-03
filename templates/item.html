@@ -401,11 +401,7 @@ var words_main=[];
 <script>
 function send_review(id)
      {
-      if(sent_review==true)
-      {
-        return;
-      }
-      sent_review=true;
+      
       var review=$('#new_review').val();
       if(review==null || review.trim()=="" || review.length==0)
       {
@@ -417,6 +413,12 @@ function send_review(id)
         alert("Review should be word or phrase with max of 25 characters");
         return;
       }
+      if(sent_review==true)
+      {
+        return;
+      }
+      sent_review=true;
+      
       $.ajax({
   type: "POST",
   url: "/review_item",

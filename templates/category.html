@@ -183,7 +183,7 @@
     
     var fill = d3.scale.category20();
     function draw_word_cloud(id){
-      dataset=jQuery.parseJSON($(id+'words').html());
+      dataset=jQuery.parseJSON($(id+'words').text());
     values=[]
     for(var key in dataset)
     {
@@ -197,7 +197,7 @@
                   .range([10, 18]);
 
      d3.layout.cloud().size([300, 200])
-      .words(jQuery.parseJSON($(id+'words').html()))
+      .words(jQuery.parseJSON($(id+'words').text()))
       /*.words([
         "Hello", "world", "normally", "you", "want", "more", "words",
         "than", "this","Hello", "world", "normally", "you", "want", "more", "words",
