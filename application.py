@@ -19,6 +19,7 @@ import codecs
 import urllib2
 import nltk
 import datetime
+import re
 
 
 SECRET_KEY='SECRET'
@@ -950,6 +951,24 @@ def process_new_item():
 
 	
 	return redirect(url_for('item',id=str(_id),name=data['name'].lower().strip()))
+
+@app.route('/options')
+def options():
+	q=request.args.get('term')
+	q=q.lower().strip()
+	client=MongoClient()
+	db=client[app.config['DATABASE']]
+	pattern=re.compile('.*'+q+'.*')
+	reviews=db.reviews.find({"name":pattern})
+	output=[]
+	try:
+		for review in reviews:
+			output.append({'value':review['display_name']})
+	except StopIteration:
+		pass
+	js=json.dumps(output)
+	resp = Response(js, status=200, mimetype='application/json')
+	return resp
 
 if app.debug is None or app.debug is False:   
 	    import logging
