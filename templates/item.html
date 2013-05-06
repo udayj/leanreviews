@@ -42,38 +42,38 @@
         <div style="display:none" id="review_words">
           {{review['data']}}
         </div>
-        <div class="span8" id="word_cloud">
+        <div class="span9" id="word_cloud">
         </div>
-        <div class="row">
-        <div class="span4" style="position:relative;top:30px;">
+        
+        <div class="span3" style="position:relative;top:30px;">
           <div class="row">
-            <div class="span4">
-          Rate this: <span class="btn btn-success" onclick="send_rating('{{review['id']}}','up_vote')"> Up Vote</span> <span class="btn btn-warning" onclick="send_rating('{{review['id']}}','down_vote')"> Down Vote</span>
-            </div>
+            
+          Rate this:<br> <span class="btn btn-success" onclick="send_rating('{{review['id']}}','up_vote')"> Up Vote</span> <span class="btn btn-warning" onclick="send_rating('{{review['id']}}','down_vote')"> Down Vote</span>
+            
             <br>
             <br>
-            <div class="span4" id="thanks_vote" style="display:none">
+            <div id="thanks_vote" style="display:none">
 
             </div>
           </div>
 
           
           <div class="row" style="margin-top:7px;">
-            <div class="span4">
+            
               Your review - in 25 characters or less<br>
-              <input id="new_review" name="name" class="span4" type="text"  placeholder="eg. awesome" >
+              <input id="new_review" name="name" class="span3" type="text"  placeholder="eg. awesome" >
               <br>
               <button type="button" class="btn btn-primary" onclick="send_review('{{review['id']}}')">Submit</button>
-            </div>
+            
             <br>
-            <div class="span4" id="thanks_review" style="display:none">
+            <div id="thanks_review" style="display:none">
             </div>
             
           </div>
           <br>
           <br>
           <div class="row">
-            <div class="span4">
+            
               <table class="table table-bordered table-striped table-hover">
                 <thead>
                   <tr>
@@ -92,25 +92,25 @@
                   {% endfor %}
                 </tbody>
               </table>
-            </div>
+            
           </div>
 
           <div class="row">
             <br>
-            <div class="span4">
+            
             <button type="button" class="btn btn-primary" id="share_fb" onclick="create_png('{{review['id']}}')">
               Share on Facebook
               
             </button>
             
 
-          </div>
-          <div class="span4" id="thanks_facebook" style="display:none;">
+          
+          <div id="thanks_facebook" style="display:none;">
             </div>
           </div>
           <br><br><br>
            <div class="row">
-            <div class="span4">
+            
               <table class="table table-bordered table-striped table-hover">
                 <thead>
                   <tr>
@@ -129,14 +129,14 @@
                   {% endfor %}
                 </tbody>
               </table>
-            </div>
+            
           </div>
             
             
           
 
         </div>
-      </div>
+      
 
       </div>
       
@@ -177,24 +177,24 @@ var words_main=[];
     function draw_word_cloud(id,review_words){
       var fontSize = d3.scale.linear()
                    .domain([0, d3.max(values)])
-                  .range([13, 45]);
-     d3.layout.cloud().size([600,450])
+                  .range([13, 47]);
+     d3.layout.cloud().size([750,450])
       .words(jQuery.parseJSON($(review_words).text()))
-      .font("Impact")
+      .font("sans-serif")
       .fontSize(function(d) { return parseInt(fontSize(d.size)); })
-      .rotate(function(d) { return ~~(Math.random() * 5) * 05 - 07; })
+      .rotate(function(d) { return ~~(Math.random() * 3) * 03 - 03; })
       .on("end", draw)
       .start();
 
   function draw(words) {
     words_main=words;
     d3.select(id).append("svg")
-        .attr("width", 600)
+        .attr("width", 750)
         .attr("height", 450)
         .attr("id","word_reviews")
         .append("g")
         
-        .attr("transform", "translate(280,215)")
+        .attr("transform", "translate(345,215)")
       .selectAll("text")
         .data(words)
       .enter().append("text")
@@ -418,7 +418,7 @@ function send_review(id)
         return;
       }
       sent_review=true;
-      
+
       $.ajax({
   type: "POST",
   url: "/review_item",
