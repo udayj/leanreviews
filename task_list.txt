@@ -12,3 +12,9 @@ v3 task list
 	better recommendations based on machine learning
 	facebook page
 	blog section
+	ui tweaks
+
+
+question: is the concept worth working on ?
+measure - shares, review submissions, voting, bounce rates, feedback from potential investors
+prerequisite - more content on books, movies

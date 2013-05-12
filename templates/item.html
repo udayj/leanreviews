@@ -33,7 +33,7 @@
            <br>
            <h4> </h4>
             
-            Can't find what you are looking for? Add a new review <a href="/add_new">here</a>
+            Can't find what you are looking for? Add a new page <a href="/add_new">here</a>
 
            </h4>
       </div>
@@ -295,6 +295,10 @@ var words_main=[];
     }*/
     function create_png(id)
     {
+      if(typeof _gaq != 'undefined')
+      {
+        _gaq.push(['User Interaction','Facebook Sharing',id]);
+      }
     var canvas = document.createElement("canvas"),
       c = canvas.getContext("2d");
   canvas.width = 600;
@@ -365,6 +369,11 @@ var words_main=[];
         return;
       }
       sent_rating=true;
+      if(typeof _gaq != 'undefined')
+      {
+        
+      _gaq.push(['User Interaction','Voting',id]);
+      }
       $.ajax({
   type: "POST",
   url: "/rate_item",
@@ -418,7 +427,10 @@ function send_review(id)
         return;
       }
       sent_review=true;
-
+      if(typeof _gaq != 'undefined')
+      {
+      _gaq.push(['User Interaction','Review Submission',id]);
+    }
       $.ajax({
   type: "POST",
   url: "/review_item",
