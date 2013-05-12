@@ -295,9 +295,9 @@ var words_main=[];
     }*/
     function create_png(id)
     {
-      if(typeof _gaq != 'undefined')
+      if(typeof ga != 'undefined')
       {
-        _gaq.push(['User Interaction','Facebook Sharing',id]);
+        ga('send','event','User Interaction','Facebook Sharing',id);
       }
     var canvas = document.createElement("canvas"),
       c = canvas.getContext("2d");
@@ -369,10 +369,10 @@ var words_main=[];
         return;
       }
       sent_rating=true;
-      if(typeof _gaq != 'undefined')
+      if(typeof ga != 'undefined')
       {
         
-      _gaq.push(['User Interaction','Voting',id]);
+        ga('send','event','User Interaction','Voting',id);
       }
       $.ajax({
   type: "POST",
@@ -427,10 +427,10 @@ function send_review(id)
         return;
       }
       sent_review=true;
-      if(typeof _gaq != 'undefined')
+      if(typeof ga != 'undefined')
       {
-      _gaq.push(['User Interaction','Review Submission',id]);
-    }
+        ga('send','event','User Interaction','Review Submission',id);
+      }
       $.ajax({
   type: "POST",
   url: "/review_item",
