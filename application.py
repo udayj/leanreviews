@@ -112,7 +112,7 @@ def front():
 	output_review=get_trending_data(6)
 	users=get_leaderboard()
 	#recent_reviews=get_recent_reviews()
-	return render_template('front.html',reviews=output_review,active='front',users=users,length=6,title='quick reviews for almost anything',
+	return render_template('front.html',reviews=output_review,active='front',users=users,length=6,title='Quick reviews for almost anything',
 							meta_description='Lean Reviews provides a quick and clean crowd opinion and review on almost anything.')
 
 @app.route('/about')
@@ -606,6 +606,12 @@ def get_recommendations(categories,present_review_id):
 		output.append([review_id,review['name'],review['display_name']])
 	return output
 
+def remove_stop_words(query):
+
+	words=['reviews','review','reveiw']
+	for word in words:
+		query=query.replace(word,' ')
+	return query
 
 @app.route('/item')
 def item():
@@ -629,7 +635,7 @@ def item():
 			name=request.args.get('name')
 			if not name:
 				return render_template('error.html')
-			name=name.lower().strip()
+			name=remove_stop_words(name).lower().strip()
 			review=collection.find({'name':name})
 			cursor=review
 			try:
@@ -642,7 +648,7 @@ def item():
 		name=request.args.get('name')
 		if not name:
 			return render_template('error.html')
-		name=name.lower().strip()
+		name=remove_stop_words(name).lower().strip()
 		review=collection.find({'name':name})
 		cursor=review
 		try:
