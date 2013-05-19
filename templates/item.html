@@ -30,12 +30,35 @@
 
       	   <div style="display:inline;font-weight:bold;font-size:19px;"> {{review['name']}} </div> <br><br> <span class="btn btn-success" style="position:relative;top:-5px;cursor:default;">{{review['upvote']}} Up votes</span>  <span class="btn btn-warning" style="position:relative;top:-5px;cursor:default;">
            {{review['downvote']}} Down votes</span>
+           
+           {% if 'picture' in review %}
            <br>
-           <h4> </h4>
-            
-            Can't find what you are looking for? Add a new page <a href="/add_new">here</a>
+           <div style="display:inline;float:left;margin-right:5px;margin-bottom:4px;">
+            <a href="{{review['picture']}}"><img src="{{review['picture']}}" alt="{{review['name']}}" width="100" height="60" 
+              style="display:inline;width:90px;height:90px;"/></a>
+           </div>
+          <div style="display:inline;" > {{review['description'] | safe}}</div>
+           <br>
+           {% else %}
+           {% if 'description' in review %}
+           <div > <b> Description</b> - {{review['description'] | safe}}</div>
+           <br>
+           {% endif %}
+           {% endif %}
 
-           </h4>
+           
+           
+           <h4> </h4>
+
+           
+      </div>
+
+      
+    </div>
+    
+    <div class="row">
+      <div class="span9">
+        <div style="font-size:17px;font-weight:bold;">Summarized Reviews</div>
       </div>
     </div>
       <div class="row">
@@ -48,7 +71,7 @@
         <div class="span3" style="position:relative;top:30px;">
           <div class="row">
             
-          Rate this:<br> <span class="btn btn-success" onclick="send_rating('{{review['id']}}','up_vote')"> Up Vote</span> <span class="btn btn-warning" onclick="send_rating('{{review['id']}}','down_vote')"> Down Vote</span>
+          Rate this<br> <span class="btn btn-success" onclick="send_rating('{{review['id']}}','up_vote')"> Up Vote</span> <span class="btn btn-warning" onclick="send_rating('{{review['id']}}','down_vote')"> Down Vote</span>
             
             <br>
             <br>
@@ -185,7 +208,7 @@ var words_main=[];
       var fontSize = d3.scale.linear()
                    .domain([0, d3.max(values)])
                   .range([13, 47]);
-     d3.layout.cloud().size([750,450])
+     d3.layout.cloud().size([750,420])
       .words(jQuery.parseJSON($(review_words).text()))
       .font("sans-serif")
       .fontSize(function(d) { return parseInt(fontSize(d.size)); })
@@ -197,11 +220,11 @@ var words_main=[];
     words_main=words;
     d3.select(id).append("svg")
         .attr("width", 750)
-        .attr("height", 450)
+        .attr("height", 420)
         .attr("id","word_reviews")
         .append("g")
         
-        .attr("transform", "translate(325,215)")
+        .attr("transform", "translate(325,185)")
       .selectAll("text")
         .data(words)
       .enter().append("text")

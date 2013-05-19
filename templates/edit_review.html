@@ -43,7 +43,8 @@
                 
                   <label class="control-label" for="description" >Description</label>
                   <div class="controls">
-                  <input type="text" id="description" name="description" value="{{review['description']}}">
+                  <textarea type="text" id="description" name="description" style="width:700px;height:100px;">{{review['description']}}
+                  </textarea>
                   
                 </div>
               </div>
@@ -55,6 +56,20 @@
                   
                 </div>
               </div>
+              
+              <div class="control-group">
+                
+                  <label class="control-label" for="category">Picture </label>
+                  <div class="controls">
+                  {% if 'picture' in review %}
+                  <input type="text" id="picture" name="picture" value="{{review['picture']}}">
+                  {% else %}
+                  <input type="text" id="picture" name="picture" value="">
+                  {% endif %}
+
+                </div>
+              </div>
+              
               <div class="control-group">
                 
                   <label class="control-label" for="review">Review</label>

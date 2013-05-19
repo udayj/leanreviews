@@ -118,7 +118,7 @@ def front():
 @app.route('/about')
 def about():
 	
-	return render_template('about.html',title='About')
+	return render_template('about.html',title='About',active='about')
 
 @login_manager.user_loader
 def load_user(_id):
@@ -424,7 +424,7 @@ def signup():
 
 @app.route('/add_new')
 def add_new():
-	return render_template('add_new.html')
+	return render_template('add_new.html',title='Add New Item',active='add_new')
 
 @app.route('/edit_review',methods=['GET','POST'])
 def edit_review():
@@ -467,7 +467,10 @@ def edit_review():
 			except StopIteration:
 				db_category={'name':category.lower().strip(),'review_ids':[review['_id']]}
 				db.categories.save(db_category)
+
 		review['description']=data['description']
+		if len(data['picture'])>5:
+			review['picture']=data['picture']
 		review['words']=ast.literal_eval(data['review'])
 		db.reviews.save(review)
 		return render_template('edit_review.html',review=review,words=str(review['words']),message="Successfully updated database")
@@ -672,7 +675,10 @@ def item():
 		output_review['data']=json.dumps(data)
 		output_review['upvote']=review['upvote']
 		output_review['downvote']=review['downvote']
-		output_review['description']=review['description']
+		if len(review['description'])>5:
+			output_review['description']=review['description']
+		if 'picture' in review:
+			output_review['picture']=review['picture']
 		recent_submitters=None
 		if 'recent_submitters' not in review:
 			recent_submitters=get_recent_submitters(3)
