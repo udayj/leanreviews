@@ -60,8 +60,9 @@
           
           <div class="row" style="margin-top:7px;">
             
-              Your review - in 25 characters or less<br>
-              <input id="new_review" name="name" class="span3" type="text"  placeholder="eg. awesome" >
+              Your review - in 25 characters or less <span id="counter" class="muted" style="display:none"></span><br>
+              <input id="new_review" name="name" class="span3" type="text"  placeholder="eg. awesome" onkeyup="update(this.value)"
+              onkeydown="if (event.keyCode==13) { send_review('{{review['id']}}') }">
               <br>
               <button type="button" class="btn btn-primary" onclick="send_review('{{review['id']}}')">Submit</button>
             
@@ -149,6 +150,12 @@
 
 {% block javascript %}
     <script>
+    function update(text)
+    {
+      $('#counter').css('display','');
+      var count=25-text.length;
+      $('#counter').html(count+' characters remaining');
+    }
     $(document).ready(function() {
     $("input#search").autocomplete({
     source: '/options'
@@ -182,7 +189,7 @@ var words_main=[];
       .words(jQuery.parseJSON($(review_words).text()))
       .font("sans-serif")
       .fontSize(function(d) { return parseInt(fontSize(d.size)); })
-      .rotate(function(d) { return ~~(Math.random() * 3) * 03 - 03; })
+      .rotate(function(d) { return 0 })//~~(Math.random() * 3) * 03 - 03; })
       .on("end", draw)
       .start();
 
@@ -194,7 +201,7 @@ var words_main=[];
         .attr("id","word_reviews")
         .append("g")
         
-        .attr("transform", "translate(345,215)")
+        .attr("transform", "translate(325,215)")
       .selectAll("text")
         .data(words)
       .enter().append("text")

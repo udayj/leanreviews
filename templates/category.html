@@ -168,6 +168,17 @@
 
 {% block javascript %}
     <script>
+    function truncate(word)
+    {
+      if(word.length>21)
+      {
+        return word.substr(0,20)+'...';
+      }
+      else
+      {
+        return word;
+      }
+    }
     $(document).ready(function() {
     $("input#search").autocomplete({
     source: items
@@ -184,20 +195,23 @@
     var fill = d3.scale.category20();
     function draw_word_cloud(id){
       dataset=jQuery.parseJSON($(id+'words').text());
-    values=[]
+    var values=[];
+    var word_values=[];
     for(var key in dataset)
     {
       
-
+      word_values.push({'text':truncate(dataset[key]['text']),'size':dataset[key]['size']});
       values.push(dataset[key]['size']);
     }
+
     var words_main=[];
     var fontSize = d3.scale.linear()
                    .domain([0, d3.max(values)])
-                  .range([10, 18]);
+                  .range([10, 23]);
 
      d3.layout.cloud().size([300, 200])
-      .words(jQuery.parseJSON($(id+'words').text()))
+     // .words(jQuery.parseJSON($(id+'words').text()))
+     .words(word_values)
       /*.words([
         "Hello", "world", "normally", "you", "want", "more", "words",
         "than", "this","Hello", "world", "normally", "you", "want", "more", "words",
