@@ -13,6 +13,7 @@
       		<button type="button" class="btn btn-primary" onclick="search()" style="position:relative;top:-5px;" > Search</button>
     	
   		</div>
+      
 		</div>
       </div>
 
@@ -155,7 +156,7 @@
     }
     $(document).ready(function() {
     $("input#search").autocomplete({
-    source: items
+    source: '/options'
 });});
     function search()
     {
