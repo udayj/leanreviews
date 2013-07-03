@@ -921,6 +921,7 @@ def review_item():
 
 
 @app.route('/process_new_item',methods=['POST'])
+@login_required
 def process_new_item():
 	data={}
 	for name,value in dict(request.form).iteritems():
@@ -982,7 +983,7 @@ def options():
 	resp = Response(js, status=200, mimetype='application/json')
 	return resp
 
-if app.debug is None or app.debug is False:   
+if app.debug is None or app.debug is False or app.debug is True:   
 	    import logging
 	    from logging.handlers import RotatingFileHandler
 	    file_handler = RotatingFileHandler('/home/uday/code/one_word_virtual/logs/application.log', maxBytes=1024 * 1024 * 100, backupCount=20)
